@@ -1,0 +1,27 @@
+# Data (never commit raw session data)
+data/raw/
+data/processed/*.parquet
+data/processed/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# OS
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# Outputs (optional — keep figures, ignore large files)
+outputs/*.pkl
+outputs/*.h5
+outputs/*.pt
