@@ -48,7 +48,12 @@ class SessionMeanBaseline:
     name = "SessionMean(baseline)"
 
     def fit(self, df: pd.DataFrame) -> "SessionMeanBaseline":
-        self.baseline_mean_ = df[df[SUBSESSION_COL] == 0][TARGET_COL].mean()
+        ss0 = df[df[SUBSESSION_COL] == 0][TARGET_COL]
+        if ss0.empty:
+            # df_game only contains game subsessions; fall back to global mean
+            self.baseline_mean_ = df[TARGET_COL].mean()
+        else:
+            self.baseline_mean_ = ss0.mean()
         return self
 
     def predict(self, df: pd.DataFrame) -> np.ndarray:
@@ -89,10 +94,21 @@ def evaluate_predictions(
     }
 
 
-def compare_baselines(df: pd.DataFrame) -> pd.DataFrame:
-    """Run all baselines and return a comparison table."""
-    target_next = df.groupby(SUBSESSION_COL)[TARGET_COL].shift(-1)
-    y_true      = target_next.values
+def compare_baselines(
+    df: pd.DataFrame,
+    target_next_col: str = "ProtocolValue_next",
+) -> pd.DataFrame:
+    """Run all baselines and return a comparison table.
+
+    If *target_next_col* already exists in *df* (computed by feature
+    engineering, with boundary NaNs already handled), use it directly.
+    Falling back to shift(-1) on a pre-filtered dataframe produces wrong
+    y_true values because the last row of each subsession was already dropped.
+    """
+    if target_next_col in df.columns:
+        y_true = df[target_next_col].values
+    else:
+        y_true = df.groupby(SUBSESSION_COL)[TARGET_COL].shift(-1).values
 
     baselines = [
         LastValueBaseline(),
