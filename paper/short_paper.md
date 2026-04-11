@@ -51,7 +51,13 @@ This work builds a minimal but complete prototype that navigates this tension ho
 | 9 | Game — neurofeedback | 202 | ~2 min |
 | **Total** | | **3,549** | **~30 min** |
 
-*See Figure 1 for the global ProtocolValue distribution and subsession-level boxplots, and Figure 2 for the full time-series across all subsessions.*
+![Figure 1 — ProtocolValue distribution: KDE global, baseline vs. game, boxplots por subsessão](../outputs/figures/eda_protocolvalue_distribution.png)
+
+*Figure 1: ProtocolValue global distribution (left), baseline vs. game comparison (centre), and per-subsession boxplots (right) showing monotonic improvement from ss1 to ss9.*
+
+![Figure 2 — ProtocolValue time series across all 10 subsessions](../outputs/figures/eda_protocolvalue_timeseries.png)
+
+*Figure 2: Raw ProtocolValue (blue) and 20-sample rolling mean (orange) for each subsession. Note the progressive upward shift in ss5–ss9.*
 
 **Target variable:** `ProtocolValue` — a scaled and offset EEG band power composite computed as:
 
@@ -78,7 +84,11 @@ Global ProtocolValue statistics (all subsessions): mean = −0.076, std = 0.500,
 
 The monotonic improvement from ss1 (−0.185) to ss9 (+0.062) is visible both in this table and in Figure 7, which plots the learning trajectory with confidence bands.
 
-**Behavioural proxy:** `PlayerPositionY` — the vertical position of the user's ship in the neurofeedback game, directly controlled by ProtocolValue. Pearson r with ProtocolValue = **0.113** (p < 0.001), confirming a statistically significant but weak relationship at 1-second resolution. Figure 3 shows the distribution and scatter plot.
+**Behavioural proxy:** `PlayerPositionY` — the vertical position of the user's ship in the neurofeedback game, directly controlled by ProtocolValue. Pearson r with ProtocolValue = **0.113** (p < 0.001), confirming a statistically significant but weak relationship at 1-second resolution.
+
+![Figure 3 — PlayerPositionY distribution and scatter vs. ProtocolValue](../outputs/figures/eda_playerpositionY.png)
+
+*Figure 3: (Left) PlayerPositionY distribution. (Right) Scatter vs. ProtocolValue with Pearson r = 0.113 — statistically significant but weak at 1-second resolution.*
 
 ---
 
@@ -110,7 +120,11 @@ The final feature matrix comprised **246 dimensions** per timestep, including:
 | Session context | 4 | Norm. subsession index, within-ss progress, etc. |
 | Action (constructed) | 1 | Inter-subsession protocol action proxy |
 
-*See Figure 8 for the Mutual Information ranking of the top 30 features.*
+![Figure 4 — Pearson correlation heatmap](../outputs/figures/eda_correlation_heatmap.png)
+
+*Figure 4: Lower-triangular Pearson correlation matrix. EEG within-band correlations are moderate; correlations with ProtocolValue are negligible at 1-second resolution.*
+
+*See Figure 8 below (after feature engineering) for the Mutual Information ranking of the top 30 features.*
 
 **Action space construction:** No explicit real-time action column was present in the data. We constructed a **3-class action space** from inter-subsession ProtocolValue mean trends:
 
@@ -141,6 +155,10 @@ The logged action distribution was heavily skewed: **8.8% Lower (n=314), 38.0% H
 | 15 | progress_norm | 0.0276 |
 
 EEG raw features do not appear until rank 10+, confirming that at 1-second resolution the brain signal carries less predictive information than its own recent history.
+
+![Figure 8 — Top-30 features by Mutual Information](../outputs/figures/feature_importance_mi.png)
+
+*Figure 8: Mutual Information scores for the top 30 features against ProtocolValue(t+1). Autoregressive PV features dominate (MI 0.08–0.095); EEG band features appear only after rank 10 (MI < 0.04).*
 
 ---
 
@@ -226,7 +244,9 @@ Per-fold results:
 | 9 | 0.334 | 0.358 | +0.018 | 67.6% |
 | **Mean** | **0.326** | **0.351 ± 0.030** | **+0.003** | **67.6%** |
 
-*See Figure 9 for LightGBM feature importance by gain, Figure 10 for predicted vs. true values on subsession 9, and Figure 13 for the full per-fold dashboard.*
+![Figure 13 — Full evaluation dashboard](../outputs/figures/final_dashboard.png)
+
+*Figure 13: Dashboard summary — per-fold test MAE (top-left), R² (top-right), directional accuracy (bottom-left), and final metric comparison table (bottom-right).*
 
 ### 4.2 Non-RL Recommendation Policy
 
@@ -238,7 +258,9 @@ a*(t) = argmax_{a} f_LGB(x(t) | action = a)
 
 This approximates a one-step lookahead policy without explicit reward modelling or Q-function estimation.
 
-*See Figure 11 for the recommended actions overlaid on ProtocolValue trajectories for three subsessions.*
+![Figure 11 — Non-RL greedy policy recommendations](../outputs/figures/nonrl_recommendations.png)
+
+*Figure 11: ProtocolValue trajectory (blue) with recommended actions overlaid (green=Lower, grey=Hold, red=Raise) for three representative subsessions. The policy collapses to 100% Hold — see §6.2 for explanation.*
 
 **Limitation encountered:** With a single session, the `action` feature was not reliably separable from session-level confounders. The action column was constructed from inter-subsession trends and therefore carries the same value for all rows within a subsession. LightGBM correctly learns that `action` has near-zero within-subsession variance and assigns it zero importance, resulting in identical predictions for all three action values and a degenerate 100% Hold policy. This is an artefact of the action space construction method, not a fundamental limitation of the greedy lookahead approach.
 
@@ -284,7 +306,13 @@ with discount `γ = 0.95` and 10 Bellman iterations. The state-action input is t
 
 ### 5.1 Prediction Performance
 
-*See Figure 5 for the ACF/PACF of ProtocolValue confirming short-range autocorrelation structure (significant lags up to ~5 samples) that motivates lag features.*
+![Figure 5 — ACF and PACF of ProtocolValue](../outputs/figures/eda_autocorrelation.png)
+
+*Figure 5: Autocorrelation Function (ACF, left) and Partial ACF (PACF, right) of ProtocolValue for lags 0–60 samples. Significant autocorrelation decays within ~5 lags, motivating the lag-1, lag-2, lag-5 features.*
+
+![Figure 6 — ProtocolValue increment distribution](../outputs/figures/eda_delta_analysis.png)
+
+*Figure 6: (Left) Distribution of Δ(ProtocolValue) — symmetric, centred near zero, consistent with a near-random-walk process. (Right) PV(t) vs. PV(t−1) scatter confirming high lag-1 persistence (r ≈ 0.74).*
 
 | Method | MAE | RMSE | R² | Dir. Acc |
 |---|---|---|---|---|
@@ -319,7 +347,13 @@ The top predictive features by LightGBM gain importance (Figure 9) were entirely
 
 EEG band power features do not appear in the top 11 by gain, consistent with near-zero raw correlations found in EDA. This suggests that at 1-second resolution, the brain signal is too noisy for direct EEG-to-outcome prediction; longer integration windows or frequency-domain derived features (frontal alpha asymmetry ratios, inter-band coherence) would likely increase predictive power.
 
-*Figure 10 shows the predicted vs. true ProtocolValue time series for subsession 9 (left panel) and the prediction scatter plot with ±1 MAE bands (right panel). The model correctly tracks the direction of change but cannot predict the amplitude of large excursions.*
+![Figure 9 — LightGBM feature importance by gain](../outputs/figures/lgbm_feature_importance.png)
+
+*Figure 9: Top-25 features by LightGBM split gain. Rolling std and mean of ProtocolValue dominate; EEG features contribute marginally — consistent with Figure 8.*
+
+![Figure 10 — Predicted vs. true ProtocolValue on subsession 9](../outputs/figures/prediction_vs_true.png)
+
+*Figure 10: (Left) Time series of predicted (orange) vs. true (blue) ProtocolValue for subsession 9. The model tracks the trend but not large excursions. (Right) Scatter plot with diagonal reference line and ±MAE bands — predictions are unbiased.*
 
 ### 5.2 RL Agent Performance
 
@@ -338,13 +372,17 @@ where `π_b` is the estimated logging policy (empirical action frequencies).
 | FQI | **+0.0020** | 309 | 11.6% |
 | Actual logged policy | +0.0005 | 2,667 | 100% |
 
-*See Figure 12 for the full reward distribution histograms and action distribution plots per policy.*
+![Figure 12 — RL policy evaluation: reward distributions and action distributions](../outputs/figures/rl_policy_evaluation.png)
+
+*Figure 12: (Top row) IPS reward distributions for Random, LinUCB, FQI, and logged policies. (Bottom row) Action distribution per policy — note LinUCB and FQI collapse to action 0 while the logged policy concentrates on action 2.*
 
 FQI marginally outperforms the actual logged policy (+0.0020 vs +0.0005) but IPS estimates are high-variance with n=309. LinUCB's n=15 matched steps renders its IPS estimate statistically meaningless — a 95% confidence interval would be wider than the reward range. Both agents collapsed to near-uniform action recommendations (action 0 for 67–100% of steps), the opposite of the logged policy's 70% action 2 — a consequence of the Q-function underestimating action 2's value due to its complete dominance in the training data (gradient boosting overfits to the majority action).
 
 ### 5.3 Neurofeedback Efficacy
 
-*See Figure 7 for the learning trajectory with per-subsession mean ± standard deviation and maximum/median bands.*
+![Figure 7 — Neurofeedback learning trajectory across subsessions](../outputs/figures/eda_subsession_trajectory.png)
+
+*Figure 7: Per-subsession mean ± std (shaded) and median/maximum (dashed) of ProtocolValue for ss1–ss9. The monotonic improvement (−0.185 to +0.062, Δ = +0.247) confirms neurofeedback efficacy. Linear fit R² = 0.94.*
 
 ProtocolValue improved **monotonically** from −0.185 (subsession 1) to +0.062 (subsession 9), a total delta of **+0.247**. This represents a **133% relative improvement** (from −0.185 to a reference of 0, the individual's resting baseline). The trend is statistically robust: a linear regression on subsession-mean ProtocolValue vs. subsession index yields R² = 0.94 (p < 0.001).
 
