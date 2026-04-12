@@ -50,6 +50,14 @@ neroes-neurofeedback/
 └── requirements.txt
 ```
 
+**Trained models:**
+
+| File | Model | Purpose |
+|---|---|---|
+| `lgbm_predictor.pkl` | LightGBM Regressor | Predicts `ProtocolValue(t+1)` from the current state vector |
+| `linucb_agent.pkl` | LinUCB Contextual Bandit | Selects the protocol action most likely to maximise reward |
+| `fqi_agent.pkl` | Fitted Q-Iteration (FQI) | Offline RL agent trained by iterative Q-function regression |
+
 ---
 
 ## Data

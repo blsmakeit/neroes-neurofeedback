@@ -21,7 +21,6 @@ build/
 Thumbs.db
 *:Zone.Identifier
 
-# Outputs (optional - keep figures, ignore large files)
-outputs/*.pkl
-outputs/*.h5
-outputs/*.pt
+
+# Documents
+paper/guia_completo_pt.md
