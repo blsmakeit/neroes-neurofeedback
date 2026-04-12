@@ -39,6 +39,17 @@ neroes-neurofeedback/
 │   ├── baselines.py
 │   └── evaluation.py
 ├── outputs/
+
+**Source modules (`src/`):**
+
+| File | Purpose |
+|---|---|
+| `data_loader.py` | Reads raw session files (metadata JSON + signal CSV) and returns a clean, validated DataFrame |
+| `features.py` | Defines all EEG columns, bands, electrodes, and game columns — shared dictionary imported by notebooks to avoid hardcoded names |
+| `baselines.py` | Implements naive reference models (LastValue, RollingMean, SessionMean, RandomAction) for comparison against LightGBM and RL |
+| `evaluation.py` | Metrics functions (MAE, RMSE, R², directional accuracy) and evaluation plots used across multiple notebooks |
+
+
 │   ├── figures/
 │   ├── lgbm_predictor.pkl
 │   ├── linucb_agent.pkl
