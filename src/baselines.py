@@ -4,10 +4,10 @@ baselines.py
 Naive baselines for comparison against the main prediction and RL modules.
 
 Baselines implemented:
-  1. LastValue    — predict ProtocolValue(t+1) = ProtocolValue(t)
-  2. RollingMean  — predict using rolling mean of last N samples
-  3. SessionMean  — predict using the mean of subsession 0 (baseline)
-  4. RandomAction — recommend a random action (lower bound for RL)
+  1. LastValue    - predict ProtocolValue(t+1) = ProtocolValue(t)
+  2. RollingMean  - predict using rolling mean of last N samples
+  3. SessionMean  - predict using the mean of subsession 0 (baseline)
+  4. RandomAction - recommend a random action (lower bound for RL)
 """
 
 import numpy as np

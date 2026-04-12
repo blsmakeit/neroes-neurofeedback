@@ -3,7 +3,7 @@
 
 **Autor:** Bruno Sousa  
 **Data:** Abril 2026  
-**Finalidade:** Compreender e explicar o projeto na totalidade — problema, métodos, resultados, limitações e implicações.
+**Finalidade:** Compreender e explicar o projeto na totalidade - problema, métodos, resultados, limitações e implicações.
 
 ---
 
@@ -11,7 +11,7 @@
 
 ### O que é o neurofeedback?
 
-O neurofeedback é uma técnica de treino cerebral baseada no princípio da biofeedback. O utilizador recebe em tempo real informação sobre a sua própria actividade cerebral — medida por EEG (electroencefalografia) — e, através de repetição e prática, aprende a auto-regular determinados padrões cerebrais.
+O neurofeedback é uma técnica de treino cerebral baseada no princípio da biofeedback. O utilizador recebe em tempo real informação sobre a sua própria actividade cerebral - medida por EEG (electroencefalografia) - e, através de repetição e prática, aprende a auto-regular determinados padrões cerebrais.
 
 A ideia é simples: se o cérebro produz o padrão desejado (por exemplo, ondas alpha na região frontal), o sistema recompensa o utilizador. Se não produz, o sistema retira ou reduz a recompensa. Ao longo de muitas sessões, o cérebro associa o padrão neurológico correcto à recompensa e começa a produzi-lo voluntariamente.
 
@@ -21,7 +21,7 @@ Aplicações clínicas incluem tratamento de ADHD, ansiedade, insónia, recupera
 
 A Neroes implementou o neurofeedback sob a forma de um **jogo de computador** chamado *Spaceship*: o utilizador controla a posição vertical de uma nave espacial com a sua actividade cerebral. Quando o cérebro produz o padrão alvo (definido pelo protocolo `F4Alpha − F3Alpha` neste caso), a nave sobe; quando não produz, a nave desce.
 
-O problema é que o protocolo tem um **parâmetro de limiar** — a dificuldade do jogo — que precisa de ser ajustado dinamicamente. Se o limiar for demasiado alto (tarefa demasiado difícil), o utilizador falha constantemente e desmotiva. Se for demasiado baixo (tarefa demasiado fácil), não há aprendizagem real.
+O problema é que o protocolo tem um **parâmetro de limiar** - a dificuldade do jogo - que precisa de ser ajustado dinamicamente. Se o limiar for demasiado alto (tarefa demasiado difícil), o utilizador falha constantemente e desmotiva. Se for demasiado baixo (tarefa demasiado fácil), não há aprendizagem real.
 
 Hoje, este ajuste é feito por um terapeuta com base na experiência clínica. O objectivo do projecto é **automatizar este ajuste** usando dados da própria sessão.
 
@@ -45,10 +45,10 @@ Este tipo de problema é formalmente descrito por um **Processo de Decisão de M
 
 O headset utilizado é o **Unicorn** da g.tec. Tecnicamente suporta 16 elétrodos, mas nesta sessão apenas **4 elétrodos** produziram sinal activo:
 
-- **F3 e F4** — região frontal esquerda e direita (associada a funções executivas, atenção)
-- **C3 e C4** — região central/motora esquerda e direita
+- **F3 e F4** - região frontal esquerda e direita (associada a funções executivas, atenção)
+- **C3 e C4** - região central/motora esquerda e direita
 
-Os restantes 12 elétrodos (AF3, AF4, F7, F8, FC5, FC6, Fp1, Fp2, O1, O2, Oz, P7, P8, Pz, T7, T8) estavam em zero constante — provavelmente por mau contacto com o couro cabeludo, o que é comum em configurações de laboratório não-clínicas.
+Os restantes 12 elétrodos (AF3, AF4, F7, F8, FC5, FC6, Fp1, Fp2, O1, O2, Oz, P7, P8, Pz, T7, T8) estavam em zero constante - provavelmente por mau contacto com o couro cabeludo, o que é comum em configurações de laboratório não-clínicas.
 
 Cada elétrodo activo fornece **5 estimativas de potência em bandas de frequência**:
 
@@ -80,11 +80,11 @@ A sessão completa dura aproximadamente 30 minutos e está dividida em **10 subs
 | 9 | Jogo | 270 | ~2.7 min |
 | **Total** | | **3,549** | **~30 min** |
 
-A **subsessão 0 é crítica**: é a **fase de calibração**. O utilizador está parado, com uma cruz de fixação no ecrã, enquanto o sistema mede o seu sinal EEG em repouso. Este sinal de repouso serve como **baseline pessoal** — o ponto de referência contra o qual todos os valores seguintes são comparados.
+A **subsessão 0 é crítica**: é a **fase de calibração**. O utilizador está parado, com uma cruz de fixação no ecrã, enquanto o sistema mede o seu sinal EEG em repouso. Este sinal de repouso serve como **baseline pessoal** - o ponto de referência contra o qual todos os valores seguintes são comparados.
 
 Cada linha dos dados representa **uma amostra temporal** (aproximadamente 1 por segundo, com base na duração das subsessões e número de linhas).
 
-### O ProtocolValue — a variável central
+### O ProtocolValue - a variável central
 
 O `ProtocolValue` é a variável mais importante de todo o projeto. É calculado a partir do sinal EEG bruto usando a fórmula:
 
@@ -93,13 +93,13 @@ ProtocolValue = TangentCoefficient × (sinal_EEG_bruto − Baseline) + Translati
 ```
 
 Onde:
-- **TangentCoefficient** = 4.4143 (nas sessões de jogo) — escala a amplitude do sinal
-- **TranslationCoefficient** = −0.0762 (nas sessões de jogo) — desloca o sinal verticalmente
-- **Baseline** = −0.2157 (média da subsessão 0 do utilizador) — o nível de referência pessoal
+- **TangentCoefficient** = 4.4143 (nas sessões de jogo) - escala a amplitude do sinal
+- **TranslationCoefficient** = −0.0762 (nas sessões de jogo) - desloca o sinal verticalmente
+- **Baseline** = −0.2157 (média da subsessão 0 do utilizador) - o nível de referência pessoal
 
-Na **subsessão 0 de calibração**, estes coeficientes são todos zero — o ProtocolValue é o sinal bruto não processado. Nas **subsessões de jogo**, o sinal é escalado e deslocado usando os coeficientes calculados durante a calibração.
+Na **subsessão 0 de calibração**, estes coeficientes são todos zero - o ProtocolValue é o sinal bruto não processado. Nas **subsessões de jogo**, o sinal é escalado e deslocado usando os coeficientes calculados durante a calibração.
 
-O protocolo específico deste utilizador é **F4Alpha − F3Alpha** — a diferença de potência Alpha entre o hemisfério direito (F4) e esquerdo (F3). Esta assimetria frontal é frequentemente associada ao equilíbrio emocional e ao estado de "flow".
+O protocolo específico deste utilizador é **F4Alpha − F3Alpha** - a diferença de potência Alpha entre o hemisfério direito (F4) e esquerdo (F3). Esta assimetria frontal é frequentemente associada ao equilíbrio emocional e ao estado de "flow".
 
 **O que significa o ProtocolValue na prática:**
 - Valor **positivo** → o cérebro está a produzir mais Alpha no hemisfério direito que no esquerdo → bom desempenho no protocolo
@@ -120,9 +120,9 @@ O protocolo específico deste utilizador é **F4Alpha − F3Alpha** — a difere
 
 ### O PlayerPositionY como proxy comportamental
 
-A posição vertical da nave (`PlayerPositionY`) é **directamente controlada pela actividade cerebral** — quando o ProtocolValue sobe, a nave sobe. É portanto um proxy comportamental do sinal neurofisiológico.
+A posição vertical da nave (`PlayerPositionY`) é **directamente controlada pela actividade cerebral** - quando o ProtocolValue sobe, a nave sobe. É portanto um proxy comportamental do sinal neurofisiológico.
 
-A correlação de Pearson entre `PlayerPositionY` e `ProtocolValue` é **r = 0.113** — positiva mas fraca, o que faz sentido: o jogo tem dinâmicas próprias (inércia, limites do ecrã) que introduzem não-linearidades. Mesmo assim, é a variável de jogo com maior correlação com o ProtocolValue.
+A correlação de Pearson entre `PlayerPositionY` e `ProtocolValue` é **r = 0.113** - positiva mas fraca, o que faz sentido: o jogo tem dinâmicas próprias (inércia, limites do ecrã) que introduzem não-linearidades. Mesmo assim, é a variável de jogo com maior correlação com o ProtocolValue.
 
 ---
 
@@ -159,9 +159,9 @@ Estas perguntas estão ordenadas por complexidade. Se P1 falhar, P2 e P3 não fa
 ### Limpeza inicial: eliminar colunas mortas
 
 Das 149 colunas originais, foram eliminadas:
-- **66 colunas de elétrodos mortos** (AF3, AF4, F7, F8, FC5, FC6, Fp1, Fp2, O1, O2, Oz, P7, P8, Pz, T7, T8 × 5–6 bandas cada) — todas zero constante
+- **66 colunas de elétrodos mortos** (AF3, AF4, F7, F8, FC5, FC6, Fp1, Fp2, O1, O2, Oz, P7, P8, Pz, T7, T8 × 5–6 bandas cada) - todas zero constante
 - **5 colunas 100% nulas** (Annotations, AsteroidPositionX, AsteroidPositionY, AudioTracks, RecoveryOffsetFromBaseline)
-- **4 colunas constantes de jogo** (OngoingBlackHole, OngoingDistortedVision, OngoingRecovery, PerformanceRating) — sem variação nesta sessão
+- **4 colunas constantes de jogo** (OngoingBlackHole, OngoingDistortedVision, OngoingRecovery, PerformanceRating) - sem variação nesta sessão
 
 Ficaram **50 colunas** com sinal real.
 
@@ -177,11 +177,11 @@ EEG_normalizado = (EEG_bruto − média_subsessão0) / desvio_padrão_subsessão
 
 Um valor de F3Alpha = 0.015 pode ser alto para uma pessoa e baixo para outra. O que importa não é o valor absoluto, mas **o desvio do estado de repouso da própria pessoa**. A normalização torna o sinal comparável dentro do mesmo indivíduo ao longo do tempo, e potencialmente comparável entre indivíduos se o modelo for re-treinado noutras sessões.
 
-Esta técnica é standard em neurofeedback clínico — é exactamente o que os terapeutas fazem ao calibrar o sistema no início de cada sessão.
+Esta técnica é standard em neurofeedback clínico - é exactamente o que os terapeutas fazem ao calibrar o sistema no início de cada sessão.
 
 ### Features de lag temporal
 
-O sinal de EEG tem **memória temporal** — o valor presente depende dos valores passados. Para capturar esta memória, criámos versões atrasadas das principais variáveis:
+O sinal de EEG tem **memória temporal** - o valor presente depende dos valores passados. Para capturar esta memória, criámos versões atrasadas das principais variáveis:
 
 - **lag-1:** o valor de há 1 amostra (≈1 segundo atrás)
 - **lag-2:** o valor de há 2 amostras
@@ -189,7 +189,7 @@ O sinal de EEG tem **memória temporal** — o valor presente depende dos valore
 
 Estas features foram criadas para: ProtocolValue, todos os 20 canais EEG normalizados, e as principais variáveis de jogo (PlayerPositionY, Morale, LevelProgress).
 
-**A importância dos lags foi confirmada pelos resultados:** As 12 features mais importantes no LightGBM final são todas autorregresivas (lags e médias rolantes do próprio ProtocolValue). O sinal tem forte memória temporal — o melhor preditor do próximo valor é o histórico recente do próprio valor.
+**A importância dos lags foi confirmada pelos resultados:** As 12 features mais importantes no LightGBM final são todas autorregresivas (lags e médias rolantes do próprio ProtocolValue). O sinal tem forte memória temporal - o melhor preditor do próximo valor é o histórico recente do próprio valor.
 
 ### Features de janela rolante (rolling features)
 
@@ -206,8 +206,8 @@ O `ProtocolValue_rstd5` (desvio padrão rolante de 5 amostras) é a **feature ma
 
 Foram adicionadas duas features de contexto que não vêm do sinal mas do timing:
 
-- **subsession_norm:** o índice da subsessão normalizado (0 a 1) — o modelo pode aprender que as sessões mais tardias têm comportamentos diferentes das iniciais
-- **sample_idx_norm:** a posição dentro de cada subsessão (0 a 1) — o modelo pode aprender que o início de cada subsessão é diferente do fim
+- **subsession_norm:** o índice da subsessão normalizado (0 a 1) - o modelo pode aprender que as sessões mais tardias têm comportamentos diferentes das iniciais
+- **sample_idx_norm:** a posição dentro de cada subsessão (0 a 1) - o modelo pode aprender que o início de cada subsessão é diferente do fim
 
 Ambas aparecem no top-15 de features por Mutual Information e no top-15 do LightGBM, confirmando que o **contexto temporal** é relevante para a predição.
 
@@ -215,9 +215,9 @@ Ambas aparecem no top-15 de features por Mutual Information e no top-15 do Light
 
 O sistema da Neroes não regista explicitamente qual acção o sistema tomou em cada instante. Por isso, o espaço de acções foi construído como proxy:
 
-- **Acção 0 — Baixar limiar:** o sistema está a facilitar a tarefa
-- **Acção 1 — Manter limiar:** o sistema mantém a dificuldade actual
-- **Acção 2 — Subir limiar:** o sistema está a aumentar a dificuldade
+- **Acção 0 - Baixar limiar:** o sistema está a facilitar a tarefa
+- **Acção 1 - Manter limiar:** o sistema mantém a dificuldade actual
+- **Acção 2 - Subir limiar:** o sistema está a aumentar a dificuldade
 
 A atribuição de acções foi feita com base em limiares do ProtocolValue, mas o resultado foi uma distribuição **extremamente desequilibrada**:
 
@@ -264,11 +264,11 @@ Com apenas 2,658 linhas de treino efectivo, as redes neuronais profundas sofreri
 - Subsampling de 80% de features e amostras por árvore (variabilidade para evitar overfitting)
 - Early stopping com paciência de 30 iterações
 
-### Walk-forward cross-validation — porque é essencial
+### Walk-forward cross-validation - porque é essencial
 
 A escolha do método de validação é **a decisão metodológica mais importante do projeto**.
 
-**O problema com K-fold aleatório:** Se misturarmos dados do futuro com o treino (por exemplo, treinar com dados das sessões 5, 7, 9 e testar na sessão 3), o modelo vê padrões que em deployment real não existiriam. Os resultados ficam artificialmente bons — é **data leakage temporal**.
+**O problema com K-fold aleatório:** Se misturarmos dados do futuro com o treino (por exemplo, treinar com dados das sessões 5, 7, 9 e testar na sessão 3), o modelo vê padrões que em deployment real não existiriam. Os resultados ficam artificialmente bons - é **data leakage temporal**.
 
 **Walk-forward CV** resolve isto: para cada fold, treina apenas nos dados cronologicamente anteriores ao fold de teste:
 
@@ -296,17 +296,17 @@ Isto simula exactamente como o sistema seria usado em produção: em cada nova s
 | 9 | 2,394 | 264 | 0.3739 | 0.4912 | −0.0200 | 67.8% |
 | **Média** | | | **0.3508 ± 0.0303** | **0.4689** | **+0.0029** | **67.6%** |
 
-**Nota sobre o fold 2 (ss2):** O MAE é o mais alto (0.4034) porque o treino é muito pequeno — apenas 234 amostras da subsessão 1. À medida que os dados de treino crescem, o MAE tende a descer (o melhor é o fold de ss8: 0.3175).
+**Nota sobre o fold 2 (ss2):** O MAE é o mais alto (0.4034) porque o treino é muito pequeno - apenas 234 amostras da subsessão 1. À medida que os dados de treino crescem, o MAE tende a descer (o melhor é o fold de ss8: 0.3175).
 
-### Porque é que o R² é quase zero — mas o modelo ainda é útil
+### Porque é que o R² é quase zero - mas o modelo ainda é útil
 
 O R² (coeficiente de determinação) mede que proporção da variância do alvo é explicada pelo modelo. Um R² = 0 significa que o modelo é equivalente a prever sempre a média; R² = 1 seria predição perfeita.
 
-O R² médio do LightGBM é **+0.0029** — praticamente zero. Isto parece mau, mas não é necessariamente um fracasso.
+O R² médio do LightGBM é **+0.0029** - praticamente zero. Isto parece mau, mas não é necessariamente um fracasso.
 
 **Porque é que o R² é tão baixo?**
 
-O ProtocolValue a 1 segundo de resolução comporta-se quase como uma **caminhada aleatória** (random walk): dado o valor actual, o próximo valor é aproximadamente imprevisível em termos de magnitude exacta. Isto é confirmado pelo facto de o modelo **LastValue** (predizer sempre o valor actual) ter R² = −0.667 — pior do que prever a média! O sinal tem reversão à média muito rápida.
+O ProtocolValue a 1 segundo de resolução comporta-se quase como uma **caminhada aleatória** (random walk): dado o valor actual, o próximo valor é aproximadamente imprevisível em termos de magnitude exacta. Isto é confirmado pelo facto de o modelo **LastValue** (predizer sempre o valor actual) ter R² = −0.667 - pior do que prever a média! O sinal tem reversão à média muito rápida.
 
 **Porque é que 67.6% de precisão direcional é útil, apesar do R² ≈ 0?**
 
@@ -336,7 +336,7 @@ Uma analogia: um meteorologista com 67.6% de precisão a prever "vai chover ou n
 | 14 | PlayerPositionY_lag5 | 430 | Posição da nave há 5s |
 | 15 | PlayerPositionY_lag2 | 429 | Posição da nave há 2s |
 
-**Conclusão crítica:** As 12 features mais importantes são **todas autorregresivas** — derivadas do próprio ProtocolValue e do PlayerPositionY. As features de EEG puro (bandas de frequência normalizadas) não aparecem no top-15. Isto sugere que **a 1 segundo de resolução, a melhor predição usa o histórico do próprio sinal, não o sinal de EEG actual.**
+**Conclusão crítica:** As 12 features mais importantes são **todas autorregresivas** - derivadas do próprio ProtocolValue e do PlayerPositionY. As features de EEG puro (bandas de frequência normalizadas) não aparecem no top-15. Isto sugere que **a 1 segundo de resolução, a melhor predição usa o histórico do próprio sinal, não o sinal de EEG actual.**
 
 Isto faz sentido neurofisiologicamente: o EEG bruto a cada segundo é muito ruidoso. A média rolante a 20 segundos já é uma estimativa muito mais estável do estado cerebral.
 
@@ -352,11 +352,11 @@ Esta é uma **política gananciosa de um passo** (one-step greedy): não conside
 
 ### Por que degenerou: acção não está nas features
 
-**O problema fundamental:** A variável `action` (0, 1, ou 2) não foi incluída no vector de features do modelo de predição. Por isso, quando o sistema tenta "simular" diferentes acções, não consegue — o modelo não tem qualquer mecanismo para diferenciar as consequências das três acções.
+**O problema fundamental:** A variável `action` (0, 1, ou 2) não foi incluída no vector de features do modelo de predição. Por isso, quando o sistema tenta "simular" diferentes acções, não consegue - o modelo não tem qualquer mecanismo para diferenciar as consequências das três acções.
 
 O resultado: o modelo prediz sempre o mesmo valor independentemente da acção simulada → recomenda sempre a mesma acção (Hold, 100% das vezes).
 
-**A taxa de melhoria de 47.6%** (passos em que o ProtocolValue sobe) não resulta de qualquer decisão real — é apenas a taxa base de passos positivos nos dados de jogo. O notebook 04, na sua configuração actual, não tem valor de recomendação.
+**A taxa de melhoria de 47.6%** (passos em que o ProtocolValue sobe) não resulta de qualquer decisão real - é apenas a taxa base de passos positivos nos dados de jogo. O notebook 04, na sua configuração actual, não tem valor de recomendação.
 
 ### O que se deveria fazer
 
@@ -392,14 +392,14 @@ A solução usada é o **Inverse Propensity Scoring (IPS)**: para estimar a reco
 
 O problema do IPS é que, se a política avaliada for muito diferente da política de registo, a taxa de coincidência é baixa → o estimador tem elevada variância → os resultados são pouco fiáveis estatisticamente.
 
-### LinUCB — o bandit contextual
+### LinUCB - o bandit contextual
 
-**O que é:** O LinUCB (Linear Upper Confidence Bound) é um algoritmo de **bandit contextual** — um caso especial de RL onde não há transições de estado (a decisão é baseada apenas no estado actual, sem considerar estados futuros).
+**O que é:** O LinUCB (Linear Upper Confidence Bound) é um algoritmo de **bandit contextual** - um caso especial de RL onde não há transições de estado (a decisão é baseada apenas no estado actual, sem considerar estados futuros).
 
 **Como funciona:**
 1. Para cada acção `a`, mantém um modelo linear: `Q(s, a) = θ_a^T × s` (recompensa esperada da acção `a` no estado `s`)
 2. Ao escolher uma acção, calcula um **upper confidence bound**: `UCB_a = θ_a^T × s + α × √(s^T × A_a^{-1} × s)`
-3. O termo `α × √(s^T × A_a^{-1} × s)` é um bónus de incerteza — estados menos explorados têm UCBs maiores (o agente é incentivado a explorar)
+3. O termo `α × √(s^T × A_a^{-1} × s)` é um bónus de incerteza - estados menos explorados têm UCBs maiores (o agente é incentivado a explorar)
 4. Escolhe a acção com maior UCB
 
 **Resultados:**
@@ -407,9 +407,9 @@ O problema do IPS é que, se a política avaliada for muito diferente da políti
 - Recompensa média nesses 15 instantes: **−0.0491**
 - Distribuição de acções recomendadas: 67% acção 0 (Baixar), 23% acção 1, 10% acção 2
 
-**Porque falhou:** O LinUCB recomenda maioritariamente "Baixar limiar" (acção 0), que é a acção oposta à que predomina nos dados reais (70% "Subir"). Com apenas 15 coincidências, o IPS é estatisticamente inútil — n=15 não permite qualquer inferência robusta. O agente não aprendeu porque os dados de treino são demasiado escassos e desequilibrados.
+**Porque falhou:** O LinUCB recomenda maioritariamente "Baixar limiar" (acção 0), que é a acção oposta à que predomina nos dados reais (70% "Subir"). Com apenas 15 coincidências, o IPS é estatisticamente inútil - n=15 não permite qualquer inferência robusta. O agente não aprendeu porque os dados de treino são demasiado escassos e desequilibrados.
 
-### FQI — Fitted Q-Iteration
+### FQI - Fitted Q-Iteration
 
 **O que é:** O FQI (Fitted Q-Iteration) é uma forma de **Q-learning offline em lote**. Em vez de atualizar uma tabela Q incrementalmente (como o Q-learning clássico), o FQI ajusta um regressor (Gradient Boosting) que mapeia (estado, acção) → valor Q esperado.
 
@@ -454,7 +454,7 @@ A política aleatória tem 883 coincidências porque, com 3 acções igualmente 
 
 ### A eficácia do neurofeedback está confirmada
 
-A descoberta mais importante não é sobre os modelos — é sobre o utilizador. O ProtocolValue melhorou consistentemente ao longo das subsessões:
+A descoberta mais importante não é sobre os modelos - é sobre o utilizador. O ProtocolValue melhorou consistentemente ao longo das subsessões:
 
 | SubSessão | Média | Evolução |
 |---|---|---|
@@ -475,8 +475,8 @@ O protocolo de neurofeedback está a funcionar para este participante. A traject
 
 ### A predição supervisionada é viável e útil
 
-- **MAE = 0.3508 ± 0.0303** — redução de 26.7% face à baseline de persistência
-- **Precisão direcional = 67.6%** — significativamente acima do acaso (50%)
+- **MAE = 0.3508 ± 0.0303** - redução de 26.7% face à baseline de persistência
+- **Precisão direcional = 67.6%** - significativamente acima do acaso (50%)
 - O modelo é 26.7% mais preciso que o baseline mais simples (LastValue)
 - A precisão direcional de 67.6% é suficiente para guiar decisões de protocolo em tempo real
 
@@ -487,7 +487,7 @@ O protocolo de neurofeedback está a funcionar para este participante. A traject
 | LightGBM | **0.3508** | +0.0029 | **−26.7%** |
 | RollingMean(w=10) | 0.3726 | +0.0429 | −22.1% |
 | SessionMean | 0.3943 | −0.0983 | −17.6% |
-| LastValue | 0.4786 | −0.6676 | — |
+| LastValue | 0.4786 | −0.6676 | - |
 
 **Nota interessante:** O RollingMean(w=10) tem R² mais alto (+0.043) do que o LightGBM (+0.003), mas MAE mais alto. Isto sugere que o LightGBM é melhor em erros absolutos mas o RollingMean captura melhor a variância relativa. Para uso prático, o MAE é a métrica mais relevante.
 
@@ -497,7 +497,7 @@ O protocolo de neurofeedback está a funcionar para este participante. A traject
 
 ### 9.1 R² ≈ 0 em todos os métodos
 
-**O que aconteceu:** Nenhum método consegue explicar mais do que ~4% da variância do ProtocolValue no passo seguinte. O LightGBM tem R² = +0.003 — praticamente inútil para predição de magnitude.
+**O que aconteceu:** Nenhum método consegue explicar mais do que ~4% da variância do ProtocolValue no passo seguinte. O LightGBM tem R² = +0.003 - praticamente inútil para predição de magnitude.
 
 **Porque aconteceu:** O ProtocolValue a 1 segundo de resolução é um sinal quase caótico. A variância entre instantes consecutivos é enorme (std ≈ 0.5) e é dominada por ruído neural e artefactos. A informação disponível (EEG de 4 elétrodos, posição do jogador) não é suficiente para prever o valor exacto.
 
@@ -509,7 +509,7 @@ O protocolo de neurofeedback está a funcionar para este participante. A traject
 
 **Porque aconteceu:** O RL offline precisa de **cobertura densa** em todo o espaço (estado, acção). Com 70% dos dados a usar a acção 2 (Subir), as acções 0 e 1 têm cobertura insuficiente para o modelo aprender as suas consequências. O bootstrap iterativo do FQI propaga e amplifica estes erros de regiões pouco cobertas.
 
-**O que precisaria de mudar:** Uma fase de **exploração controlada** onde o sistema experimenta intencionalmente as três acções com frequência razoável — pelo menos 20–30% cada. Ou uma recolha de dados em múltiplas sessões com acções aleatorizadas.
+**O que precisaria de mudar:** Uma fase de **exploração controlada** onde o sistema experimenta intencionalmente as três acções com frequência razoável - pelo menos 20–30% cada. Ou uma recolha de dados em múltiplas sessões com acções aleatorizadas.
 
 ### 9.3 Notebook 04 completamente degenerado
 
@@ -534,12 +534,12 @@ O protocolo de neurofeedback está a funcionar para este participante. A traject
 ### Para a Neroes (implicações práticas)
 
 **O que implementar imediatamente:**
-1. O modelo LightGBM de predição de direcção (67.6% precisão) pode ser integrado num sistema de alerta para terapeutas — "o sinal está prestes a degradar" ou "o utilizador está a melhorar, pode subir o limiar"
-2. Registar explicitamente todas as acções do sistema em tempo real (qual foi o ajuste do limiar em cada segundo) — isto é prerequisito para RL offline futuro
+1. O modelo LightGBM de predição de direcção (67.6% precisão) pode ser integrado num sistema de alerta para terapeutas - "o sinal está prestes a degradar" ou "o utilizador está a melhorar, pode subir o limiar"
+2. Registar explicitamente todas as acções do sistema em tempo real (qual foi o ajuste do limiar em cada segundo) - isto é prerequisito para RL offline futuro
 3. Estruturar as sessões futuras de forma a ter dados balanceados entre acções (fase exploratória automática no início de cada sessão)
 
 **O que planear a médio prazo:**
-1. Com 10+ sessões de dados por utilizador: re-treinar o FQI — a qualidade da política melhorará substancialmente
+1. Com 10+ sessões de dados por utilizador: re-treinar o FQI - a qualidade da política melhorará substancialmente
 2. Com acções registadas: o notebook 04 torna-se funcional e pode ser usado como política de recomendação simples mas eficaz
 3. Arquitectura online: substituir o FQI por um LinUCB que actualiza em tempo real durante cada sessão
 
@@ -559,7 +559,7 @@ O protocolo de neurofeedback está a funcionar para este participante. A traject
 
 ### Para RL em neurofeedback (implicações metodológicas)
 
-O projeto demonstra um problema que provavelmente afecta muitos outros trabalhos de RL em neurofeedback: **o desequilíbrio de acções no dados históricos torna o IPS altamente variante e os agentes degenerados**. A solução proposta — fase de exploração controlada — é standard em RL clínico (contextual bandit com exploração garantida) mas raramente discutida na literatura de neurofeedback.
+O projeto demonstra um problema que provavelmente afecta muitos outros trabalhos de RL em neurofeedback: **o desequilíbrio de acções no dados históricos torna o IPS altamente variante e os agentes degenerados**. A solução proposta - fase de exploração controlada - é standard em RL clínico (contextual bandit com exploração garantida) mas raramente discutida na literatura de neurofeedback.
 
 ---
 
@@ -569,7 +569,7 @@ O projeto demonstra um problema que provavelmente afecta muitos outros trabalhos
 
 | Termo | Definição |
 |---|---|
-| **EEG** | Electroencefalografia — medição da actividade eléctrica cerebral através de elétrodos no couro cabeludo |
+| **EEG** | Electroencefalografia - medição da actividade eléctrica cerebral através de elétrodos no couro cabeludo |
 | **Elétrodo** | Sensor que mede diferença de potencial eléctrico no couro cabeludo; cada posição tem uma nomenclatura normalizada (F3, C4, etc.) |
 | **Banda de frequência** | Gama de frequências do sinal EEG (Theta, Alpha, Beta, Gamma) com associações cognitivas distintas |
 | **Neurofeedback** | Técnica de treino cerebral baseada em feedback em tempo real da actividade EEG |
@@ -583,13 +583,13 @@ O projeto demonstra um problema que provavelmente afecta muitos outros trabalhos
 |---|---|
 | **Feature** | Variável de entrada de um modelo; cada linha dos dados tem múltiplas features |
 | **Feature engineering** | Processo de criar novas features mais informativas a partir dos dados brutos |
-| **MAE** | Mean Absolute Error — erro médio absoluto entre predições e valores reais |
-| **RMSE** | Root Mean Squared Error — raiz do erro quadrático médio; penaliza mais os grandes erros |
-| **R²** | Coeficiente de determinação — proporção da variância do alvo explicada pelo modelo (0=inútil, 1=perfeito) |
+| **MAE** | Mean Absolute Error - erro médio absoluto entre predições e valores reais |
+| **RMSE** | Root Mean Squared Error - raiz do erro quadrático médio; penaliza mais os grandes erros |
+| **R²** | Coeficiente de determinação - proporção da variância do alvo explicada pelo modelo (0=inútil, 1=perfeito) |
 | **Precisão direcional** | % de vezes que o modelo prevê correctamente a direcção (subida/descida) do sinal |
 | **Overfitting** | O modelo memoriza os dados de treino e não generaliza para dados novos |
-| **Walk-forward CV** | Método de validação que respeita a ordem temporal — nunca usa dados futuros no treino |
-| **Data leakage** | Uso acidental de informação futura no treino — produz resultados artificialmente bons |
+| **Walk-forward CV** | Método de validação que respeita a ordem temporal - nunca usa dados futuros no treino |
+| **Data leakage** | Uso acidental de informação futura no treino - produz resultados artificialmente bons |
 | **LightGBM** | Algoritmo de gradient boosting em árvores de decisão; eficiente e robusto com poucos dados |
 | **Mutual Information** | Medida de quanto uma feature reduz a incerteza sobre o alvo |
 | **Z-score** | Normalização: (valor − média) / desvio padrão; expressa valores em unidades de desvio padrão |
@@ -598,16 +598,16 @@ O projeto demonstra um problema que provavelmente afecta muitos outros trabalhos
 
 | Termo | Definição |
 |---|---|
-| **MDP** | Processo de Decisão de Markov — formalismo matemático para tomada de decisão sequencial |
+| **MDP** | Processo de Decisão de Markov - formalismo matemático para tomada de decisão sequencial |
 | **Estado** | Representação completa do ambiente num dado instante |
 | **Acção** | Decisão tomada pelo agente num dado estado |
 | **Recompensa** | Sinal numérico que avalia a qualidade de uma acção num dado estado |
 | **Política** | Função que mapeia estados a acções; é o que o agente aprende |
-| **Função Q** | Q(s,a) — recompensa futura esperada ao tomar a acção `a` no estado `s` |
+| **Função Q** | Q(s,a) - recompensa futura esperada ao tomar a acção `a` no estado `s` |
 | **Bandit contextual** | RL simplificado onde não há transições de estado; foca na escolha óptima de acção dado o contexto |
 | **LinUCB** | Bandit linear com upper confidence bound; equilíbrio entre exploração e exploração |
-| **FQI** | Fitted Q-Iteration — Q-learning offline usando regressores como aproximadores da função Q |
-| **IPS** | Inverse Propensity Scoring — método para estimar a recompensa de uma política offline sem a testar |
+| **FQI** | Fitted Q-Iteration - Q-learning offline usando regressores como aproximadores da função Q |
+| **IPS** | Inverse Propensity Scoring - método para estimar a recompensa de uma política offline sem a testar |
 | **Offline RL** | Aprendizagem por reforço a partir de dados históricos, sem interacção com o ambiente |
 | **Cobertura de acções** | Frequência com que cada acção foi observada nos dados históricos; RL offline requer cobertura densa |
 | **Desconto (γ)** | Factor que pondera recompensas futuras (γ=0.95 → recompensas futuras valem 95% das presentes) |

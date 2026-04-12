@@ -1,21 +1,21 @@
-# ── Core Data ─────────────────────────────────────────────────────────────────
+# - Core Data --------------------------------─
 numpy>=1.24.0
 pandas>=2.0.0
 pyarrow>=14.0.0          # parquet I/O (to_parquet / read_parquet throughout)
 
-# ── Machine Learning ──────────────────────────────────────────────────────────
+# - Machine Learning -----------------------------
 scikit-learn>=1.3.0      # mutual_info_regression, StandardScaler, Ridge,
                           # GradientBoostingRegressor, metrics
 lightgbm>=4.0.0
 
-# ── Time Series & Signal Processing ──────────────────────────────────────────
+# - Time Series & Signal Processing ---------------------
 statsmodels>=0.14.0      # plot_acf, plot_pacf (01_eda)
 scipy>=1.11.0            # scipy.stats (01_eda)
 
-# ── Visualisation ─────────────────────────────────────────────────────────────
+# - Visualisation ------------------------------─
 matplotlib>=3.8.0
 seaborn>=0.13.0
 
-# ── Notebooks ─────────────────────────────────────────────────────────────────
+# - Notebooks --------------------------------─
 jupyter>=1.0.0
 ipykernel>=6.0.0

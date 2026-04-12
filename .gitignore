@@ -21,7 +21,7 @@ build/
 Thumbs.db
 *:Zone.Identifier
 
-# Outputs (optional — keep figures, ignore large files)
+# Outputs (optional - keep figures, ignore large files)
 outputs/*.pkl
 outputs/*.h5
 outputs/*.pt

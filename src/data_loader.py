@@ -30,9 +30,9 @@ def load_session(data_dir: str | Path = DEFAULT_DATA_DIR) -> dict:
     Returns
     -------
     dict with keys:
-        'session_info'     : dict  — top-level SessionInfo.json
-        'subsession_infos' : dict  — {ss_id: info_dict}
-        'data'             : pd.DataFrame — all subsessions combined
+        'session_info'     : dict  - top-level SessionInfo.json
+        'subsession_infos' : dict  - {ss_id: info_dict}
+        'data'             : pd.DataFrame - all subsessions combined
     """
     data_dir = Path(data_dir)
     _validate_structure(data_dir)

@@ -1,4 +1,4 @@
-%% Adaptive Neurofeedback — Short Paper
+%% Adaptive Neurofeedback - Short Paper
 %% NeurIPS/ICLR-inspired single-column academic layout
 \documentclass[11pt,a4paper]{article}
 
@@ -44,7 +44,7 @@
   {\LARGE\bfseries Adaptive Neurofeedback via Supervised Learning\\[4pt]
    and Reinforcement Learning: A Single-Session Prototype}\\[10pt]
   {\large Bruno Sousa}\\[3pt]
-  {\normalsize April 2026 \quad|\quad Neroes Technical Challenge --- 1-week prototype}
+  {\normalsize April 2026 \quad|\quad Neroes Technical Challenge - 1-week prototype}
 \end{center}
 \vspace{4pt}\hrule height 0.5pt\vspace{8pt}
 
@@ -59,9 +59,9 @@ implement and compare a supervised prediction module (LightGBM), a greedy
 one-step lookahead recommendation policy, and two offline reinforcement learning
 agents (LinUCB contextual bandit and Fitted Q-Iteration). LightGBM reduces MAE
 by 26.7\% over a persistence baseline (0.351 vs.\ 0.479) and achieves 67.6\%
-\emph{directional accuracy} --- the practically relevant metric for a system that
+\emph{directional accuracy} - the practically relevant metric for a system that
 only needs to know whether improvement is expected. Both RL agents collapsed to
-degenerate policies due to insufficient action coverage --- a data-regime mismatch
+degenerate policies due to insufficient action coverage - a data-regime mismatch
 rather than an algorithmic failure. We discuss evaluation metrics, the action
 space problem, and a concrete path to a deployable real-time system.
 
@@ -82,7 +82,7 @@ Neurofeedback systems train users to self-regulate brain activity via real-time
 EEG-derived feedback. The core challenge is \emph{adaptation}: a static protocol
 ignores the highly individual and temporally non-stationary nature of EEG. An
 adaptive system should adjust protocol parameters in response to the user's
-current cognitive state --- raising the threshold when the user performs well,
+current cognitive state - raising the threshold when the user performs well,
 lowering it to prevent frustration, or switching modes on fatigue.
 
 This framing is a sequential decision problem: choose the action (protocol
@@ -101,11 +101,13 @@ deployable.
 \textbf{Adaptive neurofeedback.}
 Traditional NFB protocols apply fixed thresholds throughout a session. Recent
 work explores adaptive protocols that adjust difficulty in response to performance
-\cite{navas2022, zander2011}. Key limitation: existing adaptive systems rely on
-hand-designed heuristic rules, not learned policies.
+\cite{navas2022, zander2011}. Ariel et al.\ \cite{ariel2021} provide a
+comprehensive review of closed-loop adaptive NFB protocols. Key limitation:
+existing adaptive systems rely on hand-designed heuristic rules, not learned
+policies.
 
 \textbf{ML for EEG.}
-Lotte et al.\ \cite{lotte2018} review ML for EEG-based BCIs --- the literature is
+Lotte et al.\ \cite{lotte2018} review ML for EEG-based BCIs - the literature is
 dominated by classification (motor imagery, P300) rather than regression of
 continuous physiological signals. At 1-second resolution EEG is near-stochastic;
 longer windows (10--30\,s) and CNNs substantially improve predictive power
@@ -113,7 +115,7 @@ longer windows (10--30\,s) and CNNs substantially improve predictive power
 
 \textbf{Offline RL in clinical settings.}
 Gottesman et al.\ \cite{gottesman2019} show that offline RL on clinical data is
-fundamentally limited by action coverage --- directly applicable to our single-session
+fundamentally limited by action coverage - directly applicable to our single-session
 regime. Levine et al.\ \cite{levine2020} identify distributional shift between
 logging and evaluation policies as the core challenge of offline RL.
 
@@ -166,7 +168,7 @@ baseline subsession and nine game subsessions.
   \label{fig:timeseries}
 \end{figure}
 
-\textbf{Target variable:} \texttt{ProtocolValue} (PV) --- a scaled EEG composite:
+\textbf{Target variable:} \texttt{ProtocolValue} (PV) - a scaled EEG composite:
 \[
   \text{PV} = \text{TangentCoef} \times (\text{F4\_Alpha} - \text{F3\_Alpha}
               - \text{Baseline}) + \text{TranslationCoef}
@@ -198,13 +200,13 @@ Global statistics: mean $= -0.076$, std $= 0.500$, range $[-2.733, +2.037]$.
 \begin{figure}[H]\centering
   \includegraphics[width=\linewidth]{../outputs/figures/eda_protocolvalue_distribution.png}
   \caption{ProtocolValue distribution. (Left) Overall distribution across all
-    3,549 samples --- near-normal with slight left skew. (Right) Box plots per
+    3,549 samples - near-normal with slight left skew. (Right) Box plots per
     subsession showing the monotonic improvement in median and mean from ss0 to
     ss9.}
   \label{fig:pv-dist}
 \end{figure}
 
-\textbf{Behavioural proxy:} \texttt{PlayerPositionY} --- the vertical ship
+\textbf{Behavioural proxy:} \texttt{PlayerPositionY} - the vertical ship
 position in the neurofeedback game, directly controlled by ProtocolValue. Pearson
 $r = 0.113$ ($p < 0.001$): statistically significant but weak at 1-second
 resolution.
@@ -213,7 +215,7 @@ resolution.
 \begin{figure}[H]\centering
   \includegraphics[width=\linewidth]{../outputs/figures/eda_playerpositionY.png}
   \caption{PlayerPositionY behavioural proxy. (Left) Distribution. (Right) Scatter
-    vs.\ ProtocolValue ($r = 0.113$, $p < 0.001$) --- statistically significant
+    vs.\ ProtocolValue ($r = 0.113$, $p < 0.001$) - statistically significant
     but weak at 1-second resolution.}
   \label{fig:playery}
 \end{figure}
@@ -254,11 +256,15 @@ Action~0 = Lower threshold, Action~1 = Hold, Action~2 = Raise threshold. The
 logged distribution was heavily skewed: 8.8\% Lower, 38.0\% Hold, 53.2\% Raise
 (RL-valid subset: 11.6\% / 18.8\% / 69.6\%).
 
+Figure~\ref{fig:heatmap} shows the raw pairwise correlations among EEG channels
+and ProtocolValue, motivating the use of temporal aggregation features over raw
+values.
+
 % Fig 4
 \begin{figure}[H]\centering
   \includegraphics[width=\linewidth]{../outputs/figures/eda_correlation_heatmap.png}
   \caption{Pearson correlation matrix. EEG within-band correlations are moderate;
-    correlations with ProtocolValue are negligible at 1-second resolution ---
+    correlations with ProtocolValue are negligible at 1-second resolution -
     motivating lag and rolling features over raw values.}
   \label{fig:heatmap}
 \end{figure}
@@ -306,9 +312,9 @@ less predictive information than its own recent history.
 \subsection{Supervised Prediction Module}
 \label{sec:supervised}
 
-A LightGBM regressor predicts \texttt{ProtocolValue}$(t+1)$ from the 246-dim
-state vector. Walk-forward CV trains on subsessions $1\ldots k$ and tests on
-subsession~$k+1$ for folds $k = 1\ldots8$.
+A LightGBM regressor \cite{ke2017} predicts \texttt{ProtocolValue}$(t+1)$ from
+the 246-dim state vector. Walk-forward CV trains on subsessions $1\ldots k$ and
+tests on subsession~$k+1$ for folds $k = 1\ldots8$.
 
 \begin{table}[H]
 \centering\small
@@ -352,7 +358,7 @@ feature/bagging     & 0.8   & Subsampling per tree / per round \\
   \includegraphics[width=\linewidth]{../outputs/figures/prediction_vs_true.png}
   \caption{Prediction quality on held-out subsession. (Left) LightGBM predicted
     vs.\ true ProtocolValue on the last held-out fold. (Right) Scatter plot
-    showing concentration along the diagonal despite low $R^2$ --- the model
+    showing concentration along the diagonal despite low $R^2$ - the model
     captures directional trends rather than exact values.}
   \label{fig:pred-true}
 \end{figure}
@@ -391,30 +397,37 @@ degenerate 100\% Hold policy.
 \subsection{Reinforcement Learning Agents}
 \label{sec:rl}
 
-\textbf{MDP:} State $s(t)$: 246-dim scaled vector. Actions $A = \{0,1,2\}$.
-Reward $r(t) = \Delta\text{PV}$, clipped to $[2^{\text{nd}}, 98^{\text{th}}]$
-percentile. Discount $\gamma = 0.95$.
+\textbf{MDP formulation} \cite{sutton2018}: State $s(t)$: 246-dim scaled vector.
+Actions $A = \{0,1,2\}$. Reward $r(t) = \Delta\text{PV}$, clipped to
+$[2^{\text{nd}}, 98^{\text{th}}]$ percentile. Discount $\gamma = 0.95$.
 
-\textbf{LinUCB:}
+\textbf{LinUCB} \cite{li2010}:
 \[
   \mathrm{UCB}_a(\mathbf{x}) = \theta_a^\top\mathbf{x}
     + \alpha\sqrt{\mathbf{x}^\top A_a^{-1}\mathbf{x}}, \quad \alpha=0.3
 \]
 Updated only on steps where the bandit's recommendation matches the logged action.
 
-\textbf{FQI:} Iteratively fits $Q(s,a)$ using GradientBoostingRegressor over 10
-Bellman iterations ($\gamma = 0.95$).
+\textbf{FQI} \cite{ernst2005}: Iteratively fits $Q(s,a)$ using
+GradientBoostingRegressor over 10 Bellman iterations ($\gamma = 0.95$).
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Results}
 
 \subsection{Prediction Performance}
 
+Before evaluating model performance, we characterise the statistical properties
+of the target signal that fundamentally constrain what any predictor can achieve.
+Figure~\ref{fig:delta} shows that ProtocolValue increments are near-symmetric
+around zero - a hallmark of a near-random-walk process - which explains why
+$R^2$ is close to zero across all methods, and why directional accuracy is the
+appropriate metric.
+
 % Fig 10
 \begin{figure}[H]\centering
   \includegraphics[width=0.95\linewidth]{../outputs/figures/eda_delta_analysis.png}
   \caption{ProtocolValue increment distribution. (Left) $\Delta$PV is symmetric
-    near zero --- consistent with a near-random-walk, explaining why $R^2\approx 0$.
+    near zero - consistent with a near-random-walk, explaining why $R^2\approx 0$.
     (Right) Lag-1 scatter confirms high persistence ($r\approx 0.74$).}
   \label{fig:delta}
 \end{figure}
@@ -427,11 +440,11 @@ Bellman iterations ($\gamma = 0.95$).
 \toprule
 \textbf{Method} & \textbf{MAE} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir.~Acc} \\
 \midrule
-LastValue (persistence)   & 0.479 & 0.620 & $-0.667$ & --- \\
-RollingMean ($w=5$)       & 0.388 & 0.479 & $+0.035$ & --- \\
-RollingMean ($w=10$)      & 0.372 & 0.468 & $+0.052$ & --- \\
-RollingMean ($w=20$)      & 0.381 & 0.473 & $+0.041$ & --- \\
-SessionMean               & 0.350 & 0.480 & $0.000$  & --- \\
+LastValue (persistence)   & 0.479 & 0.620 & $-0.667$ & - \\
+RollingMean ($w=5$)       & 0.388 & 0.479 & $+0.035$ & - \\
+RollingMean ($w=10$)      & 0.372 & 0.468 & $+0.052$ & - \\
+RollingMean ($w=20$)      & 0.381 & 0.473 & $+0.041$ & - \\
+SessionMean               & 0.350 & 0.480 & $0.000$  & - \\
 \textbf{LightGBM (walk-fwd CV)} & \textbf{0.351 $\pm$ 0.030} & \textbf{0.469} & \textbf{$+0.003$} & \textbf{67.6\%} \\
 \bottomrule
 \end{tabular}
@@ -440,7 +453,7 @@ SessionMean               & 0.350 & 0.480 & $0.000$  & --- \\
 LightGBM reduces MAE by \textbf{26.7\%} over the persistence baseline.
 $R^2\approx 0$ across all methods reflects the near-random-walk nature of PV at
 1-second resolution. Unlike all baselines, LightGBM provides \textbf{directional
-predictions} (67.6\% accuracy) --- the practically relevant metric.
+predictions} (67.6\% accuracy) - the practically relevant metric.
 
 The top predictive features by LightGBM gain importance (Figure~\ref{fig:lgbm})
 were entirely autoregressive. EEG band power features do not appear in the top~11
@@ -451,13 +464,13 @@ by gain, consistent with near-zero raw correlations.
   \includegraphics[width=\linewidth]{../outputs/figures/lgbm_feature_importance.png}
   \caption{LightGBM feature importance by gain. Top-25 features by split gain.
     Rolling std and mean of ProtocolValue dominate; EEG band features contribute
-    marginally --- consistent with the MI ranking (Figure~\ref{fig:mi}).}
+    marginally - consistent with the MI ranking (Figure~\ref{fig:mi}).}
   \label{fig:lgbm}
 \end{figure}
 
 \subsection{RL Agent Performance}
 
-IPS offline evaluation:
+IPS offline evaluation \cite{precup2000, strehl2010}:
 \[
   \hat{V}_{\mathrm{IPS}} = \frac{1}{n}
   \sum_{t:\,a_\pi(s_t) = a_{\mathrm{logged}}(t)}
@@ -484,7 +497,7 @@ Logged policy    & $+0.0005$ & 2,667 & 100\%  \\
   \includegraphics[width=\linewidth]{../outputs/figures/rl_policy_evaluation.png}
   \caption{RL policy evaluation. (Top row) IPS reward distributions for Random,
     LinUCB, FQI, and logged policies. (Bottom row) Action distribution per policy
-    --- LinUCB and FQI collapse to action~0 while the logged policy concentrates
+    - LinUCB and FQI collapse to action~0 while the logged policy concentrates
     on action~2.}
   \label{fig:rl-eval}
 \end{figure}
@@ -519,10 +532,11 @@ and is deployable on edge hardware.
 \subsection{What did not work and why}
 \label{sec:disc-failure}
 
-Offline RL requires dense action coverage \cite{gottesman2019, levine2020}. With
+Offline RL requires dense action coverage \cite{gottesman2019, levine2020}
+- a finding established across healthcare and clinical domains. With
 a single session and 70\% action~2 dominance:
 \begin{itemize}
-  \item \textbf{LinUCB:} $n=15$ matched steps --- starved of signal for actions 0 and 1.
+  \item \textbf{LinUCB:} $n=15$ matched steps - starved of signal for actions 0 and 1.
   \item \textbf{FQI:} Over-values action~0; Q-function never sees enough (state, action~0) pairs.
   \item \textbf{Non-RL:} Action feature has zero within-subsession variance; LightGBM assigns it zero importance.
 \end{itemize}
@@ -533,7 +547,7 @@ This is a data regime mismatch, not a modelling failure.
 No explicit real-time action column exists. A real deployment requires logging
 each system action with a timestamp, enabling a properly labelled $(s,a,r,s')$
 dataset. Without this, action-conditioned models conflate action effects with
-natural state evolution --- an identification problem unresolvable from
+natural state evolution - an identification problem unresolvable from
 observational data alone.
 
 \subsection{Path to production}
@@ -583,9 +597,9 @@ RQ6 & Correct evaluation metric? &
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
 
-We demonstrated a complete adaptive neurofeedback prototype --- EDA, feature
+We demonstrated a complete adaptive neurofeedback prototype - EDA, feature
 engineering, supervised prediction, greedy policy, and two offline RL approaches
---- in one week from a single EEG session. Key insights:
+- in one week from a single EEG session. Key insights:
 
 \begin{enumerate}
   \item \textbf{Directional accuracy, not $R^2$, is the right metric.}

@@ -2,13 +2,13 @@
 
 **Author:** Bruno Sousa  
 **Date:** April 2026  
-**Context:** Neroes Technical Challenge — 1-week prototype
+**Context:** Neroes Technical Challenge - 1-week prototype
 
 ---
 
 ## Abstract
 
-We present a complete adaptive neurofeedback prototype addressing the question: *given a user's current physiological state and task context, what should the system do next to improve the target brain signal?* Using a single EEG session (3,549 samples, 4 active electrodes, 10 subsessions) from a neurofeedback game, we implement and compare a supervised prediction module (LightGBM), a greedy one-step lookahead recommendation policy, and two offline reinforcement learning agents (LinUCB contextual bandit and Fitted Q-Iteration). The LightGBM predictor reduces MAE by 26.7% over a persistence baseline (MAE 0.351 vs 0.479) and achieves 67.6% directional accuracy — the practically relevant metric for a system that only needs to know whether improvement is expected. The ProtocolValue signal improved by +0.247 across game subsessions (−0.185 to +0.062), confirming neurofeedback efficacy for this participant. Both RL agents collapsed to degenerate policies due to insufficient action coverage in a single-session dataset, a data regime mismatch rather than an algorithmic failure. We discuss the fundamental limitations of single-session offline RL, the correct evaluation metrics for this problem class, and a concrete path to a deployable real-time system.
+We present a complete adaptive neurofeedback prototype addressing the question: *given a user's current physiological state and task context, what should the system do next to improve the target brain signal?* Using a single EEG session (3,549 samples, 4 active electrodes, 10 subsessions) from a neurofeedback game, we implement and compare a supervised prediction module (LightGBM), a greedy one-step lookahead recommendation policy, and two offline reinforcement learning agents (LinUCB contextual bandit and Fitted Q-Iteration). The LightGBM predictor reduces MAE by 26.7% over a persistence baseline (MAE 0.351 vs 0.479) and achieves 67.6% directional accuracy - the practically relevant metric for a system that only needs to know whether improvement is expected. The ProtocolValue signal improved by +0.247 across game subsessions (−0.185 to +0.062), confirming neurofeedback efficacy for this participant. Both RL agents collapsed to degenerate policies due to insufficient action coverage in a single-session dataset, a data regime mismatch rather than an algorithmic failure. We discuss the fundamental limitations of single-session offline RL, the correct evaluation metrics for this problem class, and a concrete path to a deployable real-time system.
 
 **Contributions:**
 1. A complete end-to-end EEG neurofeedback pipeline from raw signal to adaptive protocol recommendation, runnable in under 100ms per decision.
@@ -21,11 +21,11 @@ We present a complete adaptive neurofeedback prototype addressing the question: 
 
 ## 1. Introduction
 
-Neurofeedback systems train users to self-regulate brain activity by providing real-time feedback derived from EEG signals. The core idea is operant conditioning at the neural level: when the user's brain signal moves in the desired direction, the system provides positive feedback (points, game progress, audio reward); when it regresses, the feedback is neutral or negative. Over repeated sessions, users learn — often implicitly — to sustain the desired neural state.
+Neurofeedback systems train users to self-regulate brain activity by providing real-time feedback derived from EEG signals. The core idea is operant conditioning at the neural level: when the user's brain signal moves in the desired direction, the system provides positive feedback (points, game progress, audio reward); when it regresses, the feedback is neutral or negative. Over repeated sessions, users learn - often implicitly - to sustain the desired neural state.
 
 A key open challenge is *adaptation*: a static protocol applies the same feedback rule to every user at every moment, ignoring the highly individual and temporally non-stationary nature of EEG. An adaptive system should adjust its protocol parameters in response to the user's current cognitive state to maximise learning efficiency. If the user is already performing well, raise the threshold to maintain challenge. If they are struggling, lower it to prevent frustration and preserve the reward signal. If they are fatigued, switch to a recovery mode.
 
-This framing is a sequential decision problem — at each timestep, choose the action (protocol adjustment) that will most likely improve the target neural signal. The appropriate mathematical framework is the Markov Decision Process (MDP), and the appropriate solution class is reinforcement learning. However, RL requires data, specifically data with diverse action coverage, and a single neurofeedback session provides neither.
+This framing is a sequential decision problem - at each timestep, choose the action (protocol adjustment) that will most likely improve the target neural signal. The appropriate mathematical framework is the Markov Decision Process (MDP), and the appropriate solution class is reinforcement learning. However, RL requires data, specifically data with diverse action coverage, and a single neurofeedback session provides neither.
 
 This work builds a minimal but complete prototype that navigates this tension honestly: implementing the full RL pipeline while documenting precisely where and why it fails with limited data, and providing a supervised prediction module that is immediately deployable.
 
@@ -36,40 +36,41 @@ This work builds a minimal but complete prototype that navigates this tension ho
 **Adaptive neurofeedback systems.**
 Traditional neurofeedback protocols apply fixed thresholds throughout a session,
 ignoring within-user non-stationarity. Recent work has begun exploring adaptive
-protocols that adjust the difficulty in response to performance (Navas-Olive et
-al., 2022; Zander & Kothe, 2011). A key limitation of existing adaptive systems
-is that they rely on hand-designed heuristic rules — *if performance drops below
-threshold X, ease the difficulty by Y* — rather than learned policies that can
+protocols that adjust the difficulty in response to performance [8, 9]. Ariel et al. [1] provide a comprehensive review of closed-loop adaptive NFB protocols. A key limitation of existing adaptive systems
+is that they rely on hand-designed heuristic rules - *if performance drops below
+threshold X, ease the difficulty by Y* - rather than learned policies that can
 generalise across users and cognitive states.
 
 **Machine learning for EEG.**
-Lotte et al. (2018) provide a comprehensive review of classification algorithms
+Lotte et al. [10] provide a comprehensive review of classification algorithms
 for EEG-based brain-computer interfaces; the literature is dominated by
 classification tasks (motor imagery, P300) rather than regression of continuous
 physiological signals. At 1-second resolution, EEG is near-stochastic, making
-direct signal-to-outcome prediction inherently noisy. Schirrmeister et al. (2017)
+direct signal-to-outcome prediction inherently noisy. Schirrmeister et al. [13]
 show that longer integration windows (10–30 s) and convolutional architectures
 substantially improve predictive power, motivating the rolling-window features
 used in this work.
 
 **Offline RL in clinical and healthcare settings.**
-Gottesman et al. (2019) demonstrate that offline RL evaluated on clinical data is
+Gottesman et al. [11] demonstrate that offline RL evaluated on clinical data is
 fundamentally limited by action coverage: when the logging policy concentrates on
 a small subset of actions, off-policy evaluation estimates are high-variance and
-policy improvement is unreliable — a finding directly applicable to the single-session
-data regime here. Levine et al. (2020) systematise this in a comprehensive offline RL
+policy improvement is unreliable - a finding directly applicable to the single-session
+data regime here. Levine et al. [12] systematise this in a comprehensive offline RL
 survey, identifying distributional shift between the logging policy and the evaluation
 policy as the central challenge, and establishing conditions under which offline RL
 can safely be deployed.
 
 **Contextual bandits for adaptive systems.**
-LinUCB (Li et al., 2010) is the standard approach for personalised recommendation
+LinUCB [3] is the standard approach for personalised recommendation
 with limited data, balancing exploration and exploitation via an upper-confidence-bound
 on a linear reward model. Its sample efficiency relative to model-free RL makes it
-particularly suited to low-data regimes. Soare et al. (2020) apply contextual bandit
+particularly suited to low-data regimes. Soare et al. [14] apply contextual bandit
 methods to BCI adaptation, demonstrating that even modest data (tens of sessions)
-can yield meaningful personalisation — reinforcing the importance of action logging
+can yield meaningful personalisation - reinforcing the importance of action logging
 as the immediate next step for this prototype.
+
+---
 
 ## 3. Data
 
@@ -80,22 +81,22 @@ as the immediate next step for this prototype.
 | SubSession | Type | Rows | Duration (approx.) |
 |---|---|---|---|
 | 0 | Baseline (fixation cross) | 837 | ~7 min |
-| 1 | Game — neurofeedback | 418 | ~4 min |
-| 2 | Game — neurofeedback | 395 | ~4 min |
-| 3 | Game — neurofeedback | 240 | ~2 min |
-| 4 | Game — neurofeedback | 312 | ~3 min |
-| 5 | Game — neurofeedback | 303 | ~3 min |
-| 6 | Game — neurofeedback | 291 | ~3 min |
-| 7 | Game — neurofeedback | 350 | ~3.5 min |
-| 8 | Game — neurofeedback | 201 | ~2 min |
-| 9 | Game — neurofeedback | 202 | ~2 min |
+| 1 | Game - neurofeedback | 418 | ~4 min |
+| 2 | Game - neurofeedback | 395 | ~4 min |
+| 3 | Game - neurofeedback | 240 | ~2 min |
+| 4 | Game - neurofeedback | 312 | ~3 min |
+| 5 | Game - neurofeedback | 303 | ~3 min |
+| 6 | Game - neurofeedback | 291 | ~3 min |
+| 7 | Game - neurofeedback | 350 | ~3.5 min |
+| 8 | Game - neurofeedback | 201 | ~2 min |
+| 9 | Game - neurofeedback | 202 | ~2 min |
 | **Total** | | **3,549** | **~30 min** |
 
 ![Figure 1: ProtocolValue time series across all 10 subsessions. Raw sig...](../outputs/figures/eda_protocolvalue_timeseries.png)
 
 *Figure 1: ProtocolValue time series across all 10 subsessions. Raw signal (blue) and 20-sample rolling mean (orange). Note the progressive upward baseline shift from ss5–ss9.*
 
-**Target variable:** `ProtocolValue` — a scaled and offset EEG band power composite computed as:
+**Target variable:** `ProtocolValue` - a scaled and offset EEG band power composite computed as:
 
 ```
 PV = TangentCoefficient × (raw_signal − Baseline) + TranslationCoefficient
@@ -120,15 +121,15 @@ Global ProtocolValue statistics (all subsessions): mean = −0.076, std = 0.500,
 
 ![Figure 2: ProtocolValue distribution. (Left) Overall distribution acro...](../outputs/figures/eda_protocolvalue_distribution.png)
 
-*Figure 2: ProtocolValue distribution. (Left) Overall distribution across all 3,549 samples — near-normal with slight left skew. (Right) Box plots per subsession showing the monotonic improvement in median and mean from ss0 to ss9.*
+*Figure 2: ProtocolValue distribution. (Left) Overall distribution across all 3,549 samples - near-normal with slight left skew. (Right) Box plots per subsession showing the monotonic improvement in median and mean from ss0 to ss9.*
 
 The monotonic improvement from ss1 (−0.185) to ss9 (+0.062) is visible both in this table and in Figure 13, which plots the learning trajectory with confidence bands.
 
-**Behavioural proxy:** `PlayerPositionY` — the vertical position of the user's ship in the neurofeedback game, directly controlled by ProtocolValue. Pearson r with ProtocolValue = **0.113** (p < 0.001), confirming a statistically significant but weak relationship at 1-second resolution.
+**Behavioural proxy:** `PlayerPositionY` - the vertical position of the user's ship in the neurofeedback game, directly controlled by ProtocolValue. Pearson r with ProtocolValue = **0.113** (p < 0.001), confirming a statistically significant but weak relationship at 1-second resolution.
 
 ![Figure 3: PlayerPositionY behavioural proxy. (Left) Distribution. (Rig...](../outputs/figures/eda_playerpositionY.png)
 
-*Figure 3: PlayerPositionY behavioural proxy. (Left) Distribution. (Right) Scatter vs. ProtocolValue (r=0.113, p<0.001) — statistically significant but weak at 1-second resolution.*
+*Figure 3: PlayerPositionY behavioural proxy. (Left) Distribution. (Right) Scatter vs. ProtocolValue (r=0.113, p<0.001) - statistically significant but weak at 1-second resolution.*
 
 ---
 
@@ -142,7 +143,7 @@ The normalisation formula per channel `c`:
 z_c(t) = (x_c(t) − μ_c^{ss0}) / σ_c^{ss0}
 ```
 
-This ensures that a value of 0 represents the user's resting state and positive values indicate activation above baseline, making the signal comparable across users and sessions without requiring population statistics.
+This ensures that a value of 0 represents the user's resting state and positive values indicate activation above baseline, making the signal comparable across users and sessions without requiring population statistics. Longer temporal integration windows improve EEG predictive power [13], motivating the rolling-window features.
 
 The final feature matrix comprised **246 dimensions** per timestep, including:
 
@@ -166,6 +167,10 @@ The final feature matrix comprised **246 dimensions** per timestep, including:
 
 The logged action distribution was heavily skewed: **8.8% Lower (n=314), 38.0% Hold (n=1,349), 53.2% Raise (n=1,886)** across all game rows; in the RL-valid subset: **11.6% Lower, 18.8% Hold, 69.6% Raise**.
 
+![Figure 4: Pearson correlation matrix. EEG within-band correlations are...](../outputs/figures/eda_correlation_heatmap.png)
+
+*Figure 4: Pearson correlation matrix. EEG within-band correlations are moderate; correlations with ProtocolValue are negligible at 1-second resolution - motivating lag and rolling features over raw values.*
+
 **Mutual Information analysis** (Figure 5) identified ProtocolValue autoregressive features as dominant predictors. The top 15 features by MI score:
 
 | Rank | Feature | MI Score |
@@ -187,10 +192,6 @@ The logged action distribution was heavily skewed: **8.8% Lower (n=314), 38.0% H
 | 15 | progress_norm | 0.0276 |
 
 EEG raw features do not appear until rank 10+, confirming that at 1-second resolution the brain signal carries less predictive information than its own recent history.
-
-![Figure 4: Pearson correlation matrix. EEG within-band correlations are...](../outputs/figures/eda_correlation_heatmap.png)
-
-*Figure 4: Pearson correlation matrix. EEG within-band correlations are moderate; correlations with ProtocolValue are negligible at 1-second resolution — motivating lag and rolling features over raw values.*
 
 ![Figure 5: Mutual Information scores for the top 30 features against Pr...](../outputs/figures/feature_importance_mi.png)
 
@@ -235,7 +236,7 @@ Raw CSV (Unicorn EEG)
   • Walk-forward CV (8 folds)  • Greedy 1-step lookahead
   • LightGBM regressor         • Query predictor per action
   • Directional accuracy        • Select argmax action
-  • Feature importance          [collapsed to Hold — see §7.2]
+  • Feature importance          [collapsed to Hold - see §7.2]
         │
         ▼
   05_rl_agent.ipynb
@@ -250,12 +251,12 @@ Raw CSV (Unicorn EEG)
   ──────────────────────────────
   • Per-fold MAE / R² / DirAcc
   • Final comparison table
-  • Dashboard figure (Fig. 13)
+  • Dashboard figure (Fig. 8)
 ```
 
 ### 5.1 Supervised Prediction Module
 
-A LightGBM regressor was trained to predict `ProtocolValue(t+1)` from the current 246-dimensional state vector. **Walk-forward cross-validation** strictly respects temporal ordering: for fold k (k = 1..8), train on subsessions 1..k and test on subsession k+1. This simulates real deployment where no future data is available.
+A LightGBM regressor [5] was trained to predict `ProtocolValue(t+1)` from the current 246-dimensional state vector. **Walk-forward cross-validation** strictly respects temporal ordering: for fold k (k = 1..8), train on subsessions 1..k and test on subsession k+1. This simulates real deployment where no future data is available.
 
 **Hyperparameters:**
 
@@ -286,7 +287,7 @@ Per-fold results:
 
 ![Figure 7: Prediction quality on held-out subsession. (Left) LightGBM p...](../outputs/figures/prediction_vs_true.png)
 
-*Figure 7: Prediction quality on held-out subsession. (Left) LightGBM predicted vs. true ProtocolValue on the last held-out fold. (Right) Scatter plot showing concentration along the diagonal despite low R² — the model captures directional trends rather than exact values.*
+*Figure 7: Prediction quality on held-out subsession. (Left) LightGBM predicted vs. true ProtocolValue on the last held-out fold. (Right) Scatter plot showing concentration along the diagonal despite low R² - the model captures directional trends rather than exact values.*
 
 ![Figure 8: Evaluation dashboard. Per-fold test MAE (top-left), R² (top-...](../outputs/figures/final_dashboard.png)
 
@@ -304,13 +305,13 @@ This approximates a one-step lookahead policy without explicit reward modelling 
 
 ![Figure 9: Non-RL greedy policy recommendations overlaid on ProtocolVal...](../outputs/figures/nonrl_recommendations.png)
 
-*Figure 9: Non-RL greedy policy recommendations overlaid on ProtocolValue trajectory. Policy collapses to 100% Hold — explained in §7.2.*
+*Figure 9: Non-RL greedy policy recommendations overlaid on ProtocolValue trajectory. Policy collapses to 100% Hold - explained in §7.2.*
 
 **Limitation encountered:** With a single session, the `action` feature was not reliably separable from session-level confounders. The action column was constructed from inter-subsession trends and therefore carries the same value for all rows within a subsession. LightGBM correctly learns that `action` has near-zero within-subsession variance and assigns it zero importance, resulting in identical predictions for all three action values and a degenerate 100% Hold policy. This is an artefact of the action space construction method, not a fundamental limitation of the greedy lookahead approach.
 
 ### 5.3 Reinforcement Learning Agents
 
-**MDP formulation:**
+**MDP formulation** [2]:
 - **State** `s(t)`: 246-dimensional scaled feature vector
 - **Actions** `A = {0, 1, 2}`: Lower / Hold / Raise protocol threshold
 - **Reward** `r(t) = ΔProtocolValue = PV(t+1) − PV(t)`, clipped to [2nd, 98th percentile] to reduce outlier influence
@@ -319,7 +320,7 @@ This approximates a one-step lookahead policy without explicit reward modelling 
 
 Both agents operated on the full 246-dimensional state space, cleaned and scaled with StandardScaler. Numerical instability from rolling-std features (producing float64 values exceeding float32 range ≈ 3.4 × 10³⁸) was resolved by: (1) computing in float64, (2) replacing values exceeding float32 max with NaN, (3) imputing NaN with column medians, (4) clipping to ±10σ, (5) casting to float32.
 
-**LinUCB Contextual Bandit:**
+**LinUCB Contextual Bandit** [3]:
 
 A linear upper-confidence-bound bandit maintains one ridge regression model per action. The UCB score for action `a` at state `x` is:
 
@@ -331,7 +332,7 @@ where `A_a = X_a^T X_a + I` (regularised covariance), `θ_a = A_a^{-1} b_a` (rid
 
 **Offline training used importance weighting:** the model was updated on sample `(x, a, r)` only when the bandit's greedy recommendation matched the logged action `a_logged`. This reduces the logged policy's bias but severely restricts the update set when the logged policy is concentrated (70% action 2).
 
-**Fitted Q-Iteration (FQI):**
+**Fitted Q-Iteration (FQI)** [4]:
 
 An offline Q-learning approach that iteratively fits `Q(s, a)` using a GradientBoostingRegressor. The algorithm:
 
@@ -350,20 +351,22 @@ with discount `γ = 0.95` and 10 Bellman iterations. The state-action input is t
 
 ### 6.1 Prediction Performance
 
+Before evaluating model performance, we characterise the statistical properties of the target signal that fundamentally constrain what any predictor can achieve. Figure 10 shows that ProtocolValue increments are near-symmetric around zero - a hallmark of a near-random-walk process - which explains why R² is close to zero across all methods, and why directional accuracy is the appropriate metric.
+
 ![Figure 10: ProtocolValue increment distribution. (Left) Delta(PV) is sy...](../outputs/figures/eda_delta_analysis.png)
 
-*Figure 10: ProtocolValue increment distribution. (Left) Delta(PV) is symmetric near zero — consistent with a near-random-walk, explaining why R²≈0. (Right) Lag-1 scatter confirms high persistence (r≈0.74).*
+*Figure 10: ProtocolValue increment distribution. (Left) Delta(PV) is symmetric near zero - consistent with a near-random-walk, explaining why R²≈0. (Right) Lag-1 scatter confirms high persistence (r≈0.74).*
 
 | Method | MAE | RMSE | R² | Dir. Acc |
 |---|---|---|---|---|
-| LastValue (persistence) | 0.479 | 0.620 | −0.667 | — |
-| RollingMean (w=5) | 0.388 | 0.479 | +0.035 | — |
-| RollingMean (w=10) | 0.372 | 0.468 | +0.052 | — |
-| RollingMean (w=20) | 0.381 | 0.473 | +0.041 | — |
-| SessionMean (baseline) | 0.350 | 0.480 | 0.000 | — |
+| LastValue (persistence) | 0.479 | 0.620 | −0.667 | - |
+| RollingMean (w=5) | 0.388 | 0.479 | +0.035 | - |
+| RollingMean (w=10) | 0.372 | 0.468 | +0.052 | - |
+| RollingMean (w=20) | 0.381 | 0.473 | +0.041 | - |
+| SessionMean (baseline) | 0.350 | 0.480 | 0.000 | - |
 | **LightGBM (walk-fwd CV)** | **0.351 ± 0.030** | **0.469** | **+0.003** | **67.6%** |
 
-LightGBM reduces MAE by **26.7%** over the persistence baseline (0.351 vs 0.479). R² near zero across all methods reflects the near-random-walk nature of ProtocolValue at 1-second resolution — instantaneous EEG fluctuations are dominated by noise. The SessionMean baseline (predict the user's baseline mean for every timestep) achieves comparable MAE to LightGBM on aggregate, but unlike the SessionMean baseline, LightGBM provides **directional predictions** (67.6% accuracy), which is the practically relevant metric.
+LightGBM reduces MAE by **26.7%** over the persistence baseline (0.351 vs 0.479). R² near zero across all methods reflects the near-random-walk nature of ProtocolValue at 1-second resolution - instantaneous EEG fluctuations are dominated by noise. The SessionMean baseline (predict the user's baseline mean for every timestep) achieves comparable MAE to LightGBM on aggregate, but unlike the SessionMean baseline, LightGBM provides **directional predictions** (67.6% accuracy), which is the practically relevant metric.
 
 The top predictive features by LightGBM gain importance (Figure 11) were entirely autoregressive: rolling standard deviation and mean of ProtocolValue, followed by its lags. The top 15 by gain:
 
@@ -393,7 +396,7 @@ EEG band power features do not appear in the top 11 by gain, consistent with nea
 
 ### 6.2 RL Agent Performance
 
-Policy evaluation used **Inverse Propensity Scoring (IPS)**, which weights each reward by the inverse probability of the logged action under the evaluation policy:
+Policy evaluation used **Inverse Propensity Scoring (IPS)** [6, 7], which weights each reward by the inverse probability of the logged action under the evaluation policy:
 
 ```
 IPS = (1/n) Σ_{t: a_π(s_t) = a_logged(t)} r_t / π_b(a_logged(t) | s_t)
@@ -410,9 +413,9 @@ where `π_b` is the estimated logging policy (empirical action frequencies).
 
 ![Figure 12: RL policy evaluation. (Top row) IPS reward distributions for...](../outputs/figures/rl_policy_evaluation.png)
 
-*Figure 12: RL policy evaluation. (Top row) IPS reward distributions for Random, LinUCB, FQI, and logged policies. (Bottom row) Action distribution per policy — LinUCB and FQI collapse to action 0 while the logged policy concentrates on action 2.*
+*Figure 12: RL policy evaluation. (Top row) IPS reward distributions for Random, LinUCB, FQI, and logged policies. (Bottom row) Action distribution per policy - LinUCB and FQI collapse to action 0 while the logged policy concentrates on action 2.*
 
-FQI marginally outperforms the actual logged policy (+0.0020 vs +0.0005) but IPS estimates are high-variance with n=309. LinUCB's n=15 matched steps renders its IPS estimate statistically meaningless — a 95% confidence interval would be wider than the reward range. Both agents collapsed to near-uniform action recommendations (action 0 for 67–100% of steps), the opposite of the logged policy's 70% action 2 — a consequence of the Q-function underestimating action 2's value due to its complete dominance in the training data (gradient boosting overfits to the majority action).
+FQI marginally outperforms the actual logged policy (+0.0020 vs +0.0005) but IPS estimates are high-variance with n=309. LinUCB's n=15 matched steps renders its IPS estimate statistically meaningless - a 95% confidence interval would be wider than the reward range. Both agents collapsed to near-uniform action recommendations (action 0 for 67–100% of steps), the opposite of the logged policy's 70% action 2 - a consequence of the Q-function underestimating action 2's value due to its complete dominance in the training data (gradient boosting overfits to the majority action).
 
 ### 6.3 Neurofeedback Efficacy
 
@@ -436,7 +439,7 @@ The walk-forward CV scheme is methodologically sound and gives a realistic estim
 
 ### 7.2 What did not work and why
 
-The RL agents failed to learn meaningful policies, but for a well-understood reason: **offline RL requires dense action coverage**, and a single session with 3,549 samples across a 246-dimensional state space and 3 heavily skewed actions cannot provide it. Specifically:
+The RL agents failed to learn meaningful policies, but for a well-understood reason: **offline RL requires dense action coverage** [11, 12], and a single session with 3,549 samples across a 246-dimensional state space and 3 heavily skewed actions cannot provide it. Specifically:
 
 - **LinUCB:** Only 15 out of 2,667 steps matched the bandit's recommendations to the logged actions. The importance-weighting scheme, which updates only on matched steps, effectively starved the model of training signal for actions 0 and 1.
 - **FQI:** The Q-function converged to a solution that over-values action 0 (Lower) because the Bellman iterations amplify the policy's early estimates before sufficient data corrects them. With 70% of transitions from action 2, the Q-function never sees enough (state, action 0) pairs to learn their true value.
@@ -448,7 +451,7 @@ This is a data regime mismatch, not a modelling failure. The architecture is cor
 
 The most fundamental limitation is that the data contains **no explicit real-time action column**. The action space was constructed as a proxy from inter-subsession ProtocolValue trends. A real deployment would require the system to log its own actions (threshold changes, difficulty adjustments, feedback modality switches) with precise timestamps, so that offline RL can learn from a properly labelled (state, action, reward, next-state) dataset.
 
-Without this, any action-conditioned model is conflating the effect of the action with the natural evolution of the user's state — an identification problem that cannot be resolved from observational data alone.
+Without this, any action-conditioned model is conflating the effect of the action with the natural evolution of the user's state - an identification problem that cannot be resolved from observational data alone.
 
 ### 7.4 Path to production
 
@@ -470,7 +473,7 @@ With 10+ sessions: re-run the pipeline; the RL agents become viable. With a logg
 | **RQ1** | Can we predict ProtocolValue(t+1) from current physiological state? | **Yes.** Directional accuracy 67.6%; MAE 0.351 (−26.7% vs. persistence baseline). |
 | **RQ2** | Which features carry the most predictive signal? | **Autoregressive PV features dominate** (MI 0.08–0.095). EEG band power is insufficient at 1-second resolution without temporal aggregation (EEG features appear after rank 10). |
 | **RQ3** | Can a non-RL policy recommend actions that improve ProtocolValue? | **Inconclusive with a single session.** The action feature has zero within-subsession variance, making counterfactual reasoning impossible. Requires explicit real-time action logging. |
-| **RQ4** | Can offline RL learn a policy superior to the logged behaviour? | **Marginally, but statistically unreliable.** FQI: IPS +0.0020 vs. +0.0005 logged (n=309). Requires 10+ sessions with balanced action coverage. LinUCB: n=15 matched steps — estimate meaningless. |
+| **RQ4** | Can offline RL learn a policy superior to the logged behaviour? | **Marginally, but statistically unreliable.** FQI: IPS +0.0020 vs. +0.0005 logged (n=309). Requires 10+ sessions with balanced action coverage. LinUCB: n=15 matched steps - estimate meaningless. |
 | **RQ5** | Is the neurofeedback protocol effective for this participant? | **Yes.** ProtocolValue improved +0.247 over 9 subsessions (−0.185 → +0.062). Linear trend R²=0.94, p<0.001. |
 | **RQ6** | What is the correct evaluation metric for this problem? | **Directional accuracy, not R².** R²≈0 reflects near-random-walk signal noise at 1-second resolution, not model failure. A system acting on directional predictions 67.6% of the time can improve protocol timing. |
 
@@ -478,15 +481,15 @@ With 10+ sessions: re-run the pipeline; the RL agents become viable. With a logg
 
 ## 8. Conclusion
 
-We demonstrated a complete adaptive neurofeedback prototype covering EDA, feature engineering, supervised prediction, greedy policy, and two offline RL approaches — implemented within a one-week development window from a single EEG session.
+We demonstrated a complete adaptive neurofeedback prototype covering EDA, feature engineering, supervised prediction, greedy policy, and two offline RL approaches - implemented within a one-week development window from a single EEG session.
 
 The key insights are:
 
-1. **Directional accuracy — not R² — is the right metric for this problem.** A system that correctly identifies the direction of the next ProtocolValue change 67.6% of the time can meaningfully guide protocol adaptation, even when point predictions are imprecise. R² ≈ 0 reflects signal noise, not model failure.
+1. **Directional accuracy - not R² - is the right metric for this problem.** A system that correctly identifies the direction of the next ProtocolValue change 67.6% of the time can meaningfully guide protocol adaptation, even when point predictions are imprecise. R² ≈ 0 reflects signal noise, not model failure.
 
 2. **Personalised baseline normalisation is essential.** Normalising EEG to the within-session baseline (subsession 0) is a prerequisite for cross-session and cross-user generalisation. Population statistics cannot substitute for individual resting-state calibration.
 
-3. **Offline RL is data-hungry.** A single session with skewed action coverage is insufficient for any offline RL algorithm. The failure is informative: it establishes the minimum data requirements and the correct architecture for when data becomes available.
+3. **Offline RL is data-hungry** [12]. A single session with skewed action coverage is insufficient for any offline RL algorithm. The failure is informative: it establishes the minimum data requirements and the correct architecture for when data becomes available.
 
 4. **The neurofeedback protocol works.** ProtocolValue improved by +0.247 over 9 game subsessions, confirming that the EEG-game feedback loop is effective for this participant.
 

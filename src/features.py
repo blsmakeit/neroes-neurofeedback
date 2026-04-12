@@ -1,5 +1,5 @@
 """
-features.py — Feature engineering pipeline (column names confirmed from EDA).
+features.py - Feature engineering pipeline (column names confirmed from EDA).
 """
 LIVE_ELECTRODES = ['F3','F4','C3','C4']
 EEG_BANDS       = ['Alpha','Gamma','HighBeta','LowBeta','Theta']
