@@ -1,34 +1,54 @@
 # AI Tools Usage Note
 
-As requested by the Neroes challenge briefing, here is a transparent account of how AI tools were used during this project.
+As requested by the Neroes challenge briefing, here is a transparent and specific account of how AI tools were used during this project.
 
 ---
 
 ## Tools Used
 
-### Claude (Anthropic) — claude-sonnet-4
+### Claude (Anthropic) — claude-sonnet-4-6
 
-**Where it was used:**
-- Scaffolding the initial EDA notebook structure and suggesting analytical angles for neurofeedback data
-- Proposing the overall project architecture and file organisation
-- Suggesting relevant statistical tests for baseline vs. game session comparison (Mann-Whitney U)
-- Drafting boilerplate code patterns (e.g., data loading loops, plot styling)
-- Reviewing and improving docstrings and README prose
+**Specific contributions:**
 
-**Where it was NOT used:**
-- All data interpretation is my own — Claude was not shown the actual data outputs
-- All modelling decisions (choice of features, model architecture, RL formulation) are my own
-- Critical reflections, problem framing, and limitations sections are written entirely by me
-- No code was used verbatim from AI without understanding and adapting it
+- **EDA notebook scaffolding** — suggested the initial cell structure and section order for the exploratory analysis notebook
+- **Walk-forward CV approach** — proposed using walk-forward cross-validation for temporal data after I described the dataset structure (though the decision to adopt it, and why, was mine)
+- **Debugging `read_csv` with `skiprows=8`** — helped identify that the EEG export files had an 8-line metadata header causing silent parse errors
+- **Debugging float32 overflow** — helped trace the overflow in the RL feature matrix to values exceeding the float32 range during reward accumulation in `05_rl_agent.ipynb`
+- **Matplotlib boilerplate** — drafted reusable styling patterns (figure size, axis formatting, colour maps) used as a starting point for plots
 
-### GitHub Copilot (VSCode)
-- Autocompletion of repetitive code patterns (e.g., matplotlib styling, pandas groupby chains)
-- Not used for logic or algorithmic decisions
+**Not used for:**
+- Data interpretation — Claude was not shown actual output values or results
+- Any modelling or architectural decisions
+- Scientific conclusions or paper content
+
+---
+
+### Claude Code (VSCode Extension)
+
+**Specific contributions:**
+
+- **`kernel.json` path fix** — resolved a Jupyter kernel registration issue caused by a broken path in the kernel spec
+- **File path corrections** — fixed all relative import and data-loading paths that broke when notebooks were moved into the `notebooks/` subdirectory
+- **`baselines.py` NaN masking bug** — identified and fixed incorrect boolean mask logic that was silently dropping valid rows during baseline computation
+- **Float32 overflow fix in `05_rl_agent.ipynb`** — applied the dtype correction to prevent overflow in the RL feature matrix
+
+---
+
+## What Is Entirely My Own Work
+
+The following were not assisted by AI at any point:
+
+- **Problem framing** — deciding which aspects of neurofeedback data are worth modelling, and what a meaningful prediction target looks like
+- **Action space design** — the discretisation of the RL action space and the reasoning behind it
+- **Choice of walk-forward CV** — the decision to use it over random splits, and the understanding of why random splits are invalid for this data
+- **Metric selection** — recognising that R² ≈ 0 does not mean the model is useless, and that directional accuracy is the appropriate metric for this problem
+- **RL failure analysis** — the diagnosis that poor action coverage, not model capacity, explains why the RL agent underperformed
+- **All EDA interpretations** — every conclusion drawn from plots, distributions, and statistical tests
+- **Architecture decisions** — the choice of LinUCB over DQN, and the reasoning grounded in data size and exploration constraints
+- **Scientific paper content and conclusions** — all written independently; AI was not used to draft or edit the paper
 
 ---
 
 ## Philosophy
 
-I treat AI tools the same way I treat Stack Overflow or library documentation: they accelerate syntax and boilerplate, but the reasoning, judgment, and responsibility for correctness remain entirely mine. Every AI-suggested line of code was read, understood, and either accepted, modified, or rejected based on whether it made sense for the problem at hand.
-
-This is especially important in a neurofeedback context where data interpretation errors could have downstream consequences in a real clinical or performance setting.
+AI tools were used to accelerate mechanical tasks — debugging obscure errors, fixing paths, generating boilerplate. Every line they produced was read, understood, and adapted or rejected based on whether it made sense for the problem. Reasoning, judgment, and scientific responsibility remain entirely mine. This is especially important in a neurofeedback context, where analytical errors could have real consequences in clinical or performance settings.
