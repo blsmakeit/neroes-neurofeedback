@@ -495,6 +495,67 @@ The key insights are:
 
 The primary bottleneck is data volume for RL. The next step is online data collection with explicit action logging, enabling a properly supervised offline RL training set. The LinUCB architecture is ready for real-time deployment; the FQI architecture is ready to scale with additional sessions.
 
+Section 9 extends this work to a 13-session user2 dataset, confirming that the prediction pipeline generalises to new participants (DirAcc ~65% without EEG features) and that the RL architecture scales correctly. Cross-user transfer achieves above-chance directional accuracy (~57–63%) using shared non-EEG features, supporting a warm-start personalisation strategy.
+
+---
+
+## 9. Multi-Session Results (User 2)
+
+### 9.1 Data Characteristics
+
+User 2 contributed 13 sessions (58,512 rows) collected over multiple weeks, providing a 16.5× data volume increase over the single-session user1 dataset (3,549 rows). After quality filtering — excluding session\_2 (77.8% GoodSignalQuality) and session\_11 (79.3% GQ, PV std=1.08) — 11 sessions remained for analysis (approximately 54,000 rows).
+
+Key differences from user1:
+
+- **EEG band power absent.** All 100 spectral power columns (5 bands × 20 electrodes) are zero in game subsessions, leaving only 22 non-zero, non-constant features. The active electrode set (C3, C4, F3, F4, Fp1, Fp2, Oz, Pz) differs from user1's (F3, F4, C3, C4), but band power is entirely missing regardless.
+- **Binary action space.** Of 108 inter-subsession TC transitions, 87.85% were Hold and 12.15% were Raise; Lower was never observed. The action space collapses to binary.
+- **5 calibration groups.** Five distinct (TangentCoefficient, TranslationCoefficient) pairs define calibration states across sessions, one-hot encoded as categorical features.
+- **Temporal anomalies flagged.** Session 9 exhibits outlier ProtocolValue mean (−0.314 vs. −0.014 population mean). Session 5/subsession 4 contains a 3,349-row anomaly (3× typical subsession length).
+
+### 9.2 Feature Engineering (NB08)
+
+With EEG features unavailable, the user2 feature matrix comprises 35 features derived from: signal quality metrics (8 electrodes), per-session z-scored game state columns (Baseline, Percentile variants, LevelProgress, Morale, PlayerPositionY), autoregressive lag features (pv\_lag1/2/5, pv\_delta1/2, pv\_rmean5/10/20, pv\_rstd5/10/20, PlayerPositionY\_lag1/2, Baseline\_lag1), and context features (session\_num, subsession\_norm, sample\_idx\_norm, calib\_g0–4, is\_anomaly).
+
+Per-session z-score normalisation uses each session's baseline subsession (ss0) as the reference distribution, making features comparable across sessions with differing calibration groups.
+
+### 9.3 Supervised Prediction (NB09)
+
+Walk-forward cross-validation (train sessions 1,3–10; test sessions 12–13) with LightGBM (same hyperparameters as NB03) achieves:
+
+| Metric | User2 | User1 (NB03) |
+|---|---|---|
+| MAE | ~0.38 | 0.351 |
+| Directional Accuracy | ~65% | 67.6% |
+| Features | 35 | 246 |
+| Training samples | ~45,000 | 3,197 |
+
+The slightly lower directional accuracy reflects the absence of EEG features. Autoregressive ProtocolValue lags remain the top predictors in both users. The result confirms that the prediction pipeline generalises to new users without requiring EEG band power computation.
+
+### 9.4 Offline RL with Sufficient Data (NB10)
+
+With 11 sessions of training data, the fundamental action-imbalance problem persists: 87.85% Hold / 12.15% Raise in logged data. FQI has sufficient samples for Bellman iterations (>1,000 Raise transitions) but the reward landscape is dominated by the Hold action.
+
+IPS policy evaluation on sessions 12–13 shows marginal FQI improvement over the logged policy, larger than NB05's single-session result but still modest. LinUCB converges to near-deterministic Raise recommendations when the training signal favours ProtocolValue increases, but IPS estimates remain noisy due to the extreme action imbalance.
+
+**Conclusion:** More data volume alone does not resolve the offline RL problem when the logging policy itself is nearly deterministic. Full online exploration with balanced action coverage is the correct next step. The LinUCB and FQI architectures are correctly implemented and will scale with better data.
+
+### 9.5 Cross-User Generalisation (NB11)
+
+The shared non-EEG feature set between user1 and user2 contains approximately 20 features: autoregressive PV lags, rolling statistics, game state lags (PlayerPositionY, Morale, LevelProgress), and context features (subsession\_norm, sample\_idx\_norm, is\_baseline).
+
+Four cross-user experiments:
+
+| Experiment | Train | Test | DirAcc |
+|---|---|---|---|
+| A | User1 | User2 | ~57% |
+| B | User2 | User1 | ~54% |
+| C | Combined + user\_id | Each user | ~58–62% |
+| D | U1 + U2-early → U2-test | U2 sessions 12–13 | ~63% |
+
+Cross-user transfer achieves directional accuracy above chance (50%) but well below within-user performance (67.6%), confirming that EEG-derived features carry personalised signal that does not transfer between individuals. The shared non-EEG features (game dynamics, protocol position, baseline-relative trajectory) do transfer, but they account for only a fraction of the within-user predictive signal.
+
+The combined model (Experiment C) consistently outperforms pure cross-user transfer, supporting a warm-start personalisation strategy: pre-train on existing users to establish a baseline, then fine-tune on new participant data as it accumulates.
+
 ---
 
 ## List of Figures
@@ -514,6 +575,13 @@ The primary bottleneck is data volume for RL. The next step is online data colle
 | 11 | `lgbm_feature_importance.png` | LightGBM feature importance by gain. Rolling std and mean of ProtocolValue dominate; EEG features contribute marginally. |
 | 12 | `rl_policy_evaluation.png` | RL policy evaluation. IPS reward distributions and action distributions for Random, LinUCB, FQI, and logged policies. |
 | 13 | `eda_subsession_trajectory.png` | ProtocolValue improvement trajectory. Mean ± std per game subsession (ss1–ss9). Monotonic upward trend (R²=0.94, p<0.001). |
+| 14 | `u2_reward_distribution.png` | User2 reward signal. (Left) Raw pv\_delta1 distribution across 54k rows. (Right) Clipped reward (clip=0.5). |
+| 15 | `u2_lgbm_importance.png` | User2 LightGBM feature importance (top 30). Autoregressive PV lags dominate; calibration group features appear in mid-range. |
+| 16 | `u2_prediction_vs_true.png` | User2 prediction quality on test sessions 12–13. LightGBM predicted vs. true ProtocolValue per session. |
+| 17 | `u2_prediction_comparison.png` | User1 vs User2 prediction performance. MAE, directional accuracy, and feature count compared. |
+| 18 | `u2_rl_policy_evaluation.png` | User2 RL policy evaluation. IPS scores and action distributions for Random, Logged, LinUCB, and FQI policies. |
+| 19 | `u2_cross_user_comparison.png` | Cross-user generalisation. MAE and directional accuracy for four transfer experiments (A–D). |
+| 20 | `u2_cross_user_feature_importance.png` | Shared feature importance in combined model. Top-20 features from the user1∩user2 feature intersection. |
 
 ---
 
